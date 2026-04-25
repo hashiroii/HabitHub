@@ -1,3 +1,5 @@
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+
 pluginManagement {
     repositories {
         google {
@@ -23,3 +25,4 @@ rootProject.name = "HabitHub"
 include(":app")
 include(":feature:home")
 include(":core:ui")
+include(":core:designsystem")

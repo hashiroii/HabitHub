@@ -12,7 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import dagger.hilt.android.AndroidEntryPoint
-import kz.hashiroii.habithub.ui.theme.HabitHubTheme
+import kz.hashiroii.core.designsystem.theme.HabitHubTheme
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
