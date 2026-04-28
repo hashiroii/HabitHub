@@ -44,6 +44,7 @@ android {
 
 dependencies {
     implementation(projects.core.designsystem)
+    implementation(projects.core.data)
     implementation(projects.feature.home)
     implementation(libs.androidx.navigation.compose)
 
