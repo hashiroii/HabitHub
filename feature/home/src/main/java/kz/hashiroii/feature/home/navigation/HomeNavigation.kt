@@ -1,0 +1,15 @@
+package kz.hashiroii.feature.home.navigation
+
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.compose.composable
+import kotlinx.serialization.Serializable
+import kz.hashiroii.feature.home.HomeScreen
+
+@Serializable
+object HomeRoute
+
+fun NavGraphBuilder.homeScreen() {
+    composable<HomeRoute> {
+        HomeScreen()
+    }
+}
