@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kz.hashiroii.core.domain.model.HabitWithStreak
+import kz.hashiroii.core.domain.model.TodayCompletionSummary
 import kz.hashiroii.core.domain.repository.HabitRepository
 import kz.hashiroii.core.domain.usecase.GetHabitsWithStreaksUseCase
 import kz.hashiroii.core.domain.usecase.GetTodayCompletionSummaryUseCase
@@ -22,7 +24,7 @@ class HomeViewModel @Inject constructor(
     private val habitRepository: HabitRepository,
 ) : ViewModel() {
 
-    val uiState: StateFlow<HomeUiState> = combine(
+    val uiState: StateFlow<HomeUiState> = combine<List<HabitWithStreak>, TodayCompletionSummary, HomeUiState>(
         getHabitsWithStreaks(),
         getTodayCompletionSummary(),
     ) { habits, summary ->
