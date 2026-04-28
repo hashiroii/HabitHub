@@ -1,6 +1,6 @@
 package kz.hashiroii.feature.home
 
-import androidx.compose.foundation.background
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,41 +11,101 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import android.content.res.Configuration
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kz.hashiroii.core.designsystem.theme.HabitHubTheme
+import kz.hashiroii.core.domain.model.DayActivity
+import kz.hashiroii.core.domain.model.Habit
+import kz.hashiroii.core.domain.model.HabitWithStreak
+import kz.hashiroii.core.ui.DayProgress
+import kz.hashiroii.core.ui.HabitActivityCard
+
+internal const val TAG_HOME_LOADING = "home_loading"
+internal const val TAG_HOME_ERROR = "home_error"
+
+// ── Entry point ──────────────────────────────────────────────────────────────
 
 @Composable
-fun HomeScreen(
-    uiState: HomeUiState = HomeUiState(),
+fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    HomeContent(uiState = uiState, onIntent = viewModel::onIntent)
+}
+
+// ── Internal stateless content ────────────────────────────────────────────────
+
+@Composable
+internal fun HomeContent(
+    uiState: HomeUiState,
+    onIntent: (HomeIntent) -> Unit,
+) {
+    when (uiState) {
+        is HomeUiState.Loading -> LoadingView()
+        is HomeUiState.Error -> ErrorView(message = uiState.message)
+        is HomeUiState.Success -> SuccessContent(state = uiState, onIntent = onIntent)
+    }
+}
+
+// ── State views ───────────────────────────────────────────────────────────────
+
+@Composable
+private fun LoadingView() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .testTag(TAG_HOME_LOADING),
+        contentAlignment = Alignment.Center,
+    ) {
+        CircularProgressIndicator()
+    }
+}
+
+@Composable
+private fun ErrorView(message: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .testTag(TAG_HOME_ERROR),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = message,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.error,
+        )
+    }
+}
+
+@Composable
+private fun SuccessContent(
+    state: HomeUiState.Success,
+    onIntent: (HomeIntent) -> Unit,
 ) {
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(onClick = {}) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Add Habit",
-                )
+                Icon(imageVector = Icons.Default.Add, contentDescription = "Add Habit")
             }
         },
     ) { innerPadding ->
@@ -54,39 +114,45 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .padding(horizontal = HabitHubTheme.spacing.large),
-            verticalArrangement = Arrangement.spacedBy(0.dp),
+            verticalArrangement = Arrangement.spacedBy(HabitHubTheme.spacing.default),
         ) {
             item {
                 Spacer(modifier = Modifier.height(HabitHubTheme.spacing.large))
                 SummaryCard(
-                    completedCount = uiState.completedCount,
-                    totalCount = uiState.totalCount,
-                    streakDays = uiState.streakDays,
+                    completedToday = state.completedToday,
+                    totalHabits = state.totalHabits,
+                    overallStreakDays = state.overallStreakDays,
                 )
-                Spacer(modifier = Modifier.height(HabitHubTheme.spacing.xLarge))
             }
-            items(uiState.habits, key = { it.id }) { habit ->
-                HabitRow(habit = habit)
+            items(state.habits, key = { it.habit.id }) { habitWithStreak ->
+                HabitActivityCard(
+                    habitName = habitWithStreak.habit.name,
+                    habitColor = habitWithStreak.habit.colorHex.toComposeColor(),
+                    currentCount = habitWithStreak.todayCompletionCount,
+                    goalCount = habitWithStreak.habit.goalCount,
+                    historyData = habitWithStreak.activityGrid.map { day ->
+                        DayProgress(completionCount = day.completionCount, goalCount = day.goalCount)
+                    },
+                    onAddClick = { onIntent(HomeIntent.AddCompletion(habitWithStreak.habit.id)) },
+                    onMinusClick = { onIntent(HomeIntent.RemoveCompletion(habitWithStreak.habit.id)) },
+                )
             }
-            item {
-                Spacer(modifier = Modifier.height(HabitHubTheme.spacing.xxLarge))
-            }
+            item { Spacer(modifier = Modifier.height(HabitHubTheme.spacing.xxLarge)) }
         }
     }
 }
 
+// ── Sub-composables ───────────────────────────────────────────────────────────
+
 @Composable
 private fun SummaryCard(
-    completedCount: Int,
-    totalCount: Int,
-    streakDays: Int,
+    completedToday: Int,
+    totalHabits: Int,
+    overallStreakDays: Int,
 ) {
-    val isAllComplete = totalCount > 0 && completedCount == totalCount
-    val fireColor = if (isAllComplete) {
-        MaterialTheme.colorScheme.primary
-    } else {
-        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f)
-    }
+    val isAllComplete = totalHabits > 0 && completedToday == totalHabits
+    val fireColor = if (isAllComplete) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f)
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -102,7 +168,7 @@ private fun SummaryCard(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "$completedCount/$totalCount",
+                    text = "$completedToday/$totalHabits",
                     style = HabitHubTheme.typography.counterNumber.copy(fontSize = 38.sp),
                     color = MaterialTheme.colorScheme.onSurface,
                 )
@@ -122,7 +188,7 @@ private fun SummaryCard(
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    text = "$streakDays days",
+                    text = "$overallStreakDays days",
                     style = HabitHubTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -131,71 +197,72 @@ private fun SummaryCard(
     }
 }
 
+private fun String.toComposeColor(): Color =
+    Color(android.graphics.Color.parseColor(this))
+
+// ── Previews ──────────────────────────────────────────────────────────────────
+
+private fun sampleHabits() = listOf(
+    HabitWithStreak(Habit(1L, "Morning Run", "#4CAF50", 1), 7, 1, sampleGrid()),
+    HabitWithStreak(Habit(2L, "Read 30 min", "#2196F3", 1), 3, 0, sampleGrid()),
+    HabitWithStreak(Habit(3L, "Meditate", "#9C27B0", 1), 14, 1, sampleGrid()),
+    HabitWithStreak(Habit(4L, "Drink Water", "#00BCD4", 8), 5, 4, sampleGrid()),
+)
+
+private fun sampleGrid() = List(84) { i -> DayActivity(i.toLong(), i % 3, 1) }
+
+@Preview(name = "Loading · Light", showBackground = true)
 @Composable
-private fun HabitRow(habit: HabitItem) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = HabitHubTheme.spacing.medium),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(
-            modifier = Modifier
-                .size(10.dp)
-                .background(color = habit.color, shape = CircleShape),
-        )
-        Spacer(modifier = Modifier.width(HabitHubTheme.spacing.large))
-        Text(
-            text = habit.name,
-            style = HabitHubTheme.typography.habitTitle,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.weight(1f),
-        )
-    }
-    HorizontalDivider(
-        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
-        thickness = 0.5.dp,
-    )
+private fun LoadingLightPreview() {
+    HabitHubTheme { HomeContent(HomeUiState.Loading, onIntent = {}) }
 }
 
-// --- Previews ---
+@Preview(name = "Error · Light", showBackground = true)
+@Composable
+private fun ErrorLightPreview() {
+    HabitHubTheme { HomeContent(HomeUiState.Error("Failed to load habits"), onIntent = {}) }
+}
 
 @Preview(name = "Partial · Light", showBackground = true)
 @Composable
-private fun HomeScreenPartialPreview() {
+private fun SuccessPartialLightPreview() {
     HabitHubTheme {
-        HomeScreen(uiState = HomeUiState(completedCount = 4, totalCount = 9, streakDays = 7))
+        HomeContent(
+            uiState = HomeUiState.Success(sampleHabits(), 2, 4, 7),
+            onIntent = {},
+        )
     }
 }
 
 @Preview(name = "All Complete · Light", showBackground = true)
 @Composable
-private fun HomeScreenAllCompletePreview() {
+private fun SuccessAllCompleteLightPreview() {
     HabitHubTheme {
-        HomeScreen(uiState = HomeUiState(completedCount = 9, totalCount = 9, streakDays = 14))
-    }
-}
-
-@Preview(name = "Empty · Light", showBackground = true)
-@Composable
-private fun HomeScreenEmptyPreview() {
-    HabitHubTheme {
-        HomeScreen(uiState = HomeUiState(completedCount = 0, totalCount = 0, streakDays = 0, habits = emptyList()))
+        HomeContent(
+            uiState = HomeUiState.Success(sampleHabits(), 4, 4, 14),
+            onIntent = {},
+        )
     }
 }
 
 @Preview(name = "Partial · Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun HomeScreenPartialDarkPreview() {
+private fun SuccessPartialDarkPreview() {
     HabitHubTheme(darkTheme = true) {
-        HomeScreen(uiState = HomeUiState(completedCount = 4, totalCount = 9, streakDays = 7))
+        HomeContent(
+            uiState = HomeUiState.Success(sampleHabits(), 2, 4, 7),
+            onIntent = {},
+        )
     }
 }
 
 @Preview(name = "All Complete · Dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun HomeScreenAllCompleteDarkPreview() {
+private fun SuccessAllCompleteDarkPreview() {
     HabitHubTheme(darkTheme = true) {
-        HomeScreen(uiState = HomeUiState(completedCount = 9, totalCount = 9, streakDays = 14))
+        HomeContent(
+            uiState = HomeUiState.Success(sampleHabits(), 4, 4, 14),
+            onIntent = {},
+        )
     }
 }
