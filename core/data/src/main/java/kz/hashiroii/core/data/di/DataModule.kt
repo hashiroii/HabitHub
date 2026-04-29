@@ -31,7 +31,7 @@ abstract class DataModule {
                 context,
                 HabitHubDatabase::class.java,
                 "habithub.db",
-            ).build()
+            ).fallbackToDestructiveMigration(true).build()
 
         @Provides
         fun provideHabitDao(db: HabitHubDatabase): HabitDao = db.habitDao()

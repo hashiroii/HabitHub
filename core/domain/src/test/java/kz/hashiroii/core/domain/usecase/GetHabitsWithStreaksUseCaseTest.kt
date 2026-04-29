@@ -31,7 +31,7 @@ class GetHabitsWithStreaksUseCaseTest {
 
     @Test
     fun `streak is 1 when habit completed today`() = runTest {
-        fakeRepository.setHabits(listOf(Habit(1L, "Run", "#4CAF50", 1)))
+        fakeRepository.setHabits(listOf(Habit(1L, "Run", colorHex = "#4CAF50", goalCount = 1)))
         fakeRepository.setCompletions(listOf(
             HabitCompletion(1L, 1L, System.currentTimeMillis()),
         ))
@@ -43,7 +43,7 @@ class GetHabitsWithStreaksUseCaseTest {
 
     @Test
     fun `streak is 0 when habit has never been completed`() = runTest {
-        fakeRepository.setHabits(listOf(Habit(1L, "Run", "#4CAF50", 1)))
+        fakeRepository.setHabits(listOf(Habit(1L, "Run", colorHex = "#4CAF50", goalCount = 1)))
         useCase().test {
             assertEquals(0, awaitItem().first().streakDays)
             cancelAndIgnoreRemainingEvents()
@@ -52,7 +52,7 @@ class GetHabitsWithStreaksUseCaseTest {
 
     @Test
     fun `todayCompletionCount equals number of completions logged today`() = runTest {
-        fakeRepository.setHabits(listOf(Habit(1L, "Water", "#2196F3", 8)))
+        fakeRepository.setHabits(listOf(Habit(1L, "Water", colorHex = "#2196F3", goalCount = 8)))
         fakeRepository.setCompletions(listOf(
             HabitCompletion(1L, 1L, System.currentTimeMillis()),
             HabitCompletion(2L, 1L, System.currentTimeMillis()),
@@ -66,7 +66,7 @@ class GetHabitsWithStreaksUseCaseTest {
 
     @Test
     fun `activity grid covers exactly 12 weeks`() = runTest {
-        fakeRepository.setHabits(listOf(Habit(1L, "Run", "#4CAF50", 1)))
+        fakeRepository.setHabits(listOf(Habit(1L, "Run", colorHex = "#4CAF50", goalCount = 1)))
         useCase().test {
             assertEquals(84, awaitItem().first().activityGrid.size)
             cancelAndIgnoreRemainingEvents()
@@ -76,8 +76,8 @@ class GetHabitsWithStreaksUseCaseTest {
     @Test
     fun `each habit gets its own streak calculated independently`() = runTest {
         fakeRepository.setHabits(listOf(
-            Habit(1L, "Run", "#4CAF50", 1),
-            Habit(2L, "Read", "#2196F3", 1),
+            Habit(1L, "Run", colorHex = "#4CAF50", goalCount = 1),
+            Habit(2L, "Read", colorHex = "#2196F3", goalCount = 1),
         ))
         fakeRepository.setCompletions(listOf(
             HabitCompletion(1L, 1L, System.currentTimeMillis()),

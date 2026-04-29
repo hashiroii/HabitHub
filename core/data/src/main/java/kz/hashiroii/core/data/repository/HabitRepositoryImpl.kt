@@ -20,6 +20,9 @@ class HabitRepositoryImpl @Inject constructor(
     override fun observeHabits(): Flow<List<Habit>> =
         habitDao.observeAll().map { it.map { entity -> entity.toDomain() } }
 
+    override fun observeHabitById(habitId: Long): Flow<Habit?> =
+        habitDao.observeById(habitId).map { it?.toDomain() }
+
     override fun observeAllCompletions(): Flow<List<HabitCompletion>> =
         completionDao.observeAll().map { it.map { entity -> entity.toDomain() } }
 
@@ -40,4 +43,16 @@ class HabitRepositoryImpl @Inject constructor(
 
     override suspend fun removeLatestCompletion(habitId: Long) =
         completionDao.deleteLatestByHabitId(habitId)
+
+    override suspend fun addCompletionForDay(habitId: Long, timestampMillis: Long) {
+        completionDao.insert(
+            HabitCompletionEntity(
+                habitId = habitId,
+                completedAt = timestampMillis,
+            ),
+        )
+    }
+
+    override suspend fun removeCompletionForDay(habitId: Long, epochDay: Long) =
+        completionDao.deleteByHabitIdAndEpochDay(habitId, epochDay)
 }

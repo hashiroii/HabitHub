@@ -33,9 +33,9 @@ class GetTodayCompletionSummaryUseCaseTest {
     @Test
     fun `completedHabits counts only habits with a completion today`() = runTest {
         fakeRepository.setHabits(listOf(
-            Habit(1L, "Run", "#4CAF50", 1),
-            Habit(2L, "Read", "#2196F3", 1),
-            Habit(3L, "Meditate", "#9C27B0", 1),
+            Habit(1L, "Run", colorHex = "#4CAF50", goalCount = 1),
+            Habit(2L, "Read", colorHex = "#2196F3", goalCount = 1),
+            Habit(3L, "Meditate", colorHex = "#9C27B0", goalCount = 1),
         ))
         fakeRepository.setCompletions(listOf(
             HabitCompletion(1L, 1L, System.currentTimeMillis()),
@@ -51,7 +51,7 @@ class GetTodayCompletionSummaryUseCaseTest {
 
     @Test
     fun `overall streak is 1 when there are completions today`() = runTest {
-        fakeRepository.setHabits(listOf(Habit(1L, "Run", "#4CAF50", 1)))
+        fakeRepository.setHabits(listOf(Habit(1L, "Run", colorHex = "#4CAF50", goalCount = 1)))
         fakeRepository.setCompletions(listOf(
             HabitCompletion(1L, 1L, System.currentTimeMillis()),
         ))
@@ -63,7 +63,7 @@ class GetTodayCompletionSummaryUseCaseTest {
 
     @Test
     fun `multiple completions of the same habit count as one completed habit`() = runTest {
-        fakeRepository.setHabits(listOf(Habit(1L, "Water", "#00BCD4", 8)))
+        fakeRepository.setHabits(listOf(Habit(1L, "Water", colorHex = "#00BCD4", goalCount = 8)))
         fakeRepository.setCompletions(listOf(
             HabitCompletion(1L, 1L, System.currentTimeMillis()),
             HabitCompletion(2L, 1L, System.currentTimeMillis()),

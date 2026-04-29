@@ -8,6 +8,8 @@ import kz.hashiroii.core.domain.model.HabitCompletion
 internal fun HabitEntity.toDomain() = Habit(
     id = id,
     name = name,
+    description = description,
+    iconName = iconName,
     colorHex = colorHex,
     goalCount = goalCount,
     createdAt = createdAt,
@@ -16,6 +18,8 @@ internal fun HabitEntity.toDomain() = Habit(
 internal fun Habit.toEntity() = HabitEntity(
     id = id,
     name = name,
+    description = description,
+    iconName = iconName,
     colorHex = colorHex,
     goalCount = goalCount,
     createdAt = createdAt,

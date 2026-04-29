@@ -9,7 +9,7 @@ import kz.hashiroii.core.data.database.entity.HabitEntity
 
 @Database(
     entities = [HabitEntity::class, HabitCompletionEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = false,
 )
 abstract class HabitHubDatabase : RoomDatabase() {

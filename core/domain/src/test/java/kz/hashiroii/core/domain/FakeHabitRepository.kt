@@ -15,6 +15,7 @@ class FakeHabitRepository : HabitRepository {
     fun setCompletions(completions: List<HabitCompletion>) { completionsFlow.value = completions }
 
     override fun observeHabits(): Flow<List<Habit>> = habitsFlow
+    override fun observeHabitById(habitId: Long): Flow<Habit?> = habitsFlow.map { it.firstOrNull { h -> h.id == habitId } }
     override fun observeAllCompletions(): Flow<List<HabitCompletion>> = completionsFlow
 
     override suspend fun addHabit(habit: Habit): Long {
@@ -41,5 +42,21 @@ class FakeHabitRepository : HabitRepository {
             .filter { it.habitId == habitId }
             .maxByOrNull { it.completedAt } ?: return
         completionsFlow.value = completionsFlow.value.filter { it.id != latest.id }
+    }
+
+    override suspend fun addCompletionForDay(habitId: Long, timestampMillis: Long) {
+        val newId = (completionsFlow.value.maxOfOrNull { it.id } ?: 0L) + 1L
+        completionsFlow.value = completionsFlow.value + HabitCompletion(
+            id = newId,
+            habitId = habitId,
+            completedAt = timestampMillis,
+        )
+    }
+
+    override suspend fun removeCompletionForDay(habitId: Long, epochDay: Long) {
+        val target = completionsFlow.value
+            .filter { it.habitId == habitId && it.completedAt / 86_400_000L == epochDay }
+            .maxByOrNull { it.completedAt } ?: return
+        completionsFlow.value = completionsFlow.value.filter { it.id != target.id }
     }
 }

@@ -24,4 +24,16 @@ interface HabitCompletionDao {
         )
     """)
     suspend fun deleteLatestByHabitId(habitId: Long)
+
+    @Query("""
+        DELETE FROM habit_completions
+        WHERE id = (
+            SELECT id FROM habit_completions
+            WHERE habitId = :habitId
+            AND completedAt / 86400000 = :epochDay
+            ORDER BY completedAt DESC
+            LIMIT 1
+        )
+    """)
+    suspend fun deleteByHabitIdAndEpochDay(habitId: Long, epochDay: Long)
 }

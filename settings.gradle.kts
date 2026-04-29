@@ -24,6 +24,8 @@ dependencyResolutionManagement {
 rootProject.name = "HabitHub"
 include(":app")
 include(":feature:home")
+include(":feature:habit")
+include(":feature:reminders")
 include(":core:ui")
 include(":core:designsystem")
 include(":core:data")

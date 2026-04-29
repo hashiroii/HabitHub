@@ -6,9 +6,12 @@ import kz.hashiroii.core.domain.model.HabitCompletion
 
 interface HabitRepository {
     fun observeHabits(): Flow<List<Habit>>
+    fun observeHabitById(habitId: Long): Flow<Habit?>
     fun observeAllCompletions(): Flow<List<HabitCompletion>>
     suspend fun addHabit(habit: Habit): Long
     suspend fun deleteHabit(habitId: Long)
     suspend fun addCompletion(habitId: Long)
     suspend fun removeLatestCompletion(habitId: Long)
+    suspend fun addCompletionForDay(habitId: Long, timestampMillis: Long)
+    suspend fun removeCompletionForDay(habitId: Long, epochDay: Long)
 }
