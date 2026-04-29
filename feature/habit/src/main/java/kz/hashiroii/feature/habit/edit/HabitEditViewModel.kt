@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kz.hashiroii.core.domain.model.HabitWithStreak
 import kz.hashiroii.core.domain.repository.HabitRepository
 import kz.hashiroii.core.domain.usecase.GetHabitByIdUseCase
 
@@ -54,7 +55,7 @@ class HabitEditViewModel @Inject constructor(
             .mapValues { it.value.size }
     }
 
-    val uiState: StateFlow<HabitEditUiState> = combine(
+    val uiState: StateFlow<HabitEditUiState> = combine<HabitWithStreak, Map<Long, Int>, EphemeralState, HabitEditUiState>(
         habitWithStreakFlow,
         completionsByDayFlow,
         _ephemeral,
