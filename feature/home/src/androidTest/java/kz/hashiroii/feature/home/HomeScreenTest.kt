@@ -48,7 +48,7 @@ class HomeScreenTest {
                     uiState = HomeUiState.Success(
                         habits = listOf(
                             HabitWithStreak(
-                                habit = Habit(1L, "Morning Run", "#4CAF50", 1),
+                                habit = Habit(1L, "Morning Run", colorHex = "#4CAF50", goalCount = 1),
                                 streakDays = 3,
                                 todayCompletionCount = 0,
                                 activityGrid = List(84) { i -> DayActivity(i.toLong(), 0, 1) },

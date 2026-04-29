@@ -49,8 +49,8 @@ class HomeViewModelTest {
     @Test
     fun `Success reflects correct habit count`() = runTest {
         fakeRepository.setHabits(listOf(
-            Habit(1L, "Run", "#4CAF50", 1),
-            Habit(2L, "Read", "#2196F3", 1),
+            Habit(1L, "Run", colorHex = "#4CAF50", goalCount = 1),
+            Habit(2L, "Read", colorHex = "#2196F3", goalCount = 1),
         ))
         viewModel.uiState.test {
             skipItems(1) // Loading
@@ -63,8 +63,8 @@ class HomeViewModelTest {
     @Test
     fun `Success reflects completedToday from repository`() = runTest {
         fakeRepository.setHabits(listOf(
-            Habit(1L, "Run", "#4CAF50", 1),
-            Habit(2L, "Read", "#2196F3", 1),
+            Habit(1L, "Run", colorHex = "#4CAF50", goalCount = 1),
+            Habit(2L, "Read", colorHex = "#2196F3", goalCount = 1),
         ))
         fakeRepository.setCompletions(listOf(
             HabitCompletion(1L, 1L, System.currentTimeMillis()),
@@ -83,7 +83,7 @@ class HomeViewModelTest {
             skipItems(1) // Loading
             assertEquals(0, (awaitItem() as HomeUiState.Success).totalHabits)
 
-            fakeRepository.setHabits(listOf(Habit(1L, "Meditate", "#9C27B0", 1)))
+            fakeRepository.setHabits(listOf(Habit(1L, "Meditate", colorHex = "#9C27B0", goalCount = 1)))
 
             assertEquals(1, (awaitItem() as HomeUiState.Success).totalHabits)
             cancelAndIgnoreRemainingEvents()
@@ -92,7 +92,7 @@ class HomeViewModelTest {
 
     @Test
     fun `AddCompletion intent increments todayCompletionCount`() = runTest {
-        fakeRepository.setHabits(listOf(Habit(1L, "Run", "#4CAF50", 1)))
+        fakeRepository.setHabits(listOf(Habit(1L, "Run", colorHex = "#4CAF50", goalCount = 1)))
         viewModel.uiState.test {
             skipItems(1) // Loading
             assertEquals(0, (awaitItem() as HomeUiState.Success).habits.first().todayCompletionCount)
@@ -107,7 +107,7 @@ class HomeViewModelTest {
 
     @Test
     fun `RemoveCompletion intent decrements todayCompletionCount`() = runTest {
-        fakeRepository.setHabits(listOf(Habit(1L, "Run", "#4CAF50", 1)))
+        fakeRepository.setHabits(listOf(Habit(1L, "Run", colorHex = "#4CAF50", goalCount = 1)))
         fakeRepository.setCompletions(listOf(
             HabitCompletion(1L, 1L, System.currentTimeMillis()),
         ))

@@ -8,8 +8,10 @@ import kz.hashiroii.feature.home.HomeScreen
 @Serializable
 object HomeRoute
 
-fun NavGraphBuilder.homeScreen() {
+fun NavGraphBuilder.homeScreen(
+    onAddHabit: () -> Unit = {},
+) {
     composable<HomeRoute> {
-        HomeScreen()
+        HomeScreen(onAddHabit = onAddHabit)
     }
 }

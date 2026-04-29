@@ -48,9 +48,12 @@ internal const val TAG_HOME_ERROR = "home_error"
 // ── Entry point ──────────────────────────────────────────────────────────────
 
 @Composable
-fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
+fun HomeScreen(
+    onAddHabit: () -> Unit = {},
+    viewModel: HomeViewModel = hiltViewModel(),
+) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    HomeContent(uiState = uiState, onIntent = viewModel::onIntent)
+    HomeContent(uiState = uiState, onIntent = viewModel::onIntent, onAddHabit = onAddHabit)
 }
 
 // ── Internal stateless content ────────────────────────────────────────────────
@@ -59,11 +62,12 @@ fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
 internal fun HomeContent(
     uiState: HomeUiState,
     onIntent: (HomeIntent) -> Unit,
+    onAddHabit: () -> Unit = {},
 ) {
     when (uiState) {
         is HomeUiState.Loading -> LoadingView()
         is HomeUiState.Error -> ErrorView(message = uiState.message)
-        is HomeUiState.Success -> SuccessContent(state = uiState, onIntent = onIntent)
+        is HomeUiState.Success -> SuccessContent(state = uiState, onIntent = onIntent, onAddHabit = onAddHabit)
     }
 }
 
@@ -101,10 +105,11 @@ private fun ErrorView(message: String) {
 private fun SuccessContent(
     state: HomeUiState.Success,
     onIntent: (HomeIntent) -> Unit,
+    onAddHabit: () -> Unit,
 ) {
     Scaffold(
         floatingActionButton = {
-            FloatingActionButton(onClick = {}) {
+            FloatingActionButton(onClick = onAddHabit) {
                 Icon(imageVector = Icons.Default.Add, contentDescription = "Add Habit")
             }
         },
@@ -203,10 +208,10 @@ private fun String.toComposeColor(): Color =
 // ── Previews ──────────────────────────────────────────────────────────────────
 
 private fun sampleHabits() = listOf(
-    HabitWithStreak(Habit(1L, "Morning Run", "#4CAF50", 1), 7, 1, sampleGrid()),
-    HabitWithStreak(Habit(2L, "Read 30 min", "#2196F3", 1), 3, 0, sampleGrid()),
-    HabitWithStreak(Habit(3L, "Meditate", "#9C27B0", 1), 14, 1, sampleGrid()),
-    HabitWithStreak(Habit(4L, "Drink Water", "#00BCD4", 8), 5, 4, sampleGrid()),
+    HabitWithStreak(Habit(1L, "Morning Run", colorHex = "#4CAF50", goalCount = 1), 7, 1, sampleGrid()),
+    HabitWithStreak(Habit(2L, "Read 30 min", colorHex = "#2196F3", goalCount = 1), 3, 0, sampleGrid()),
+    HabitWithStreak(Habit(3L, "Meditate", colorHex = "#9C27B0", goalCount = 1), 14, 1, sampleGrid()),
+    HabitWithStreak(Habit(4L, "Drink Water", colorHex = "#00BCD4", goalCount = 8), 5, 4, sampleGrid()),
 )
 
 private fun sampleGrid() = List(84) { i -> DayActivity(i.toLong(), i % 3, 1) }

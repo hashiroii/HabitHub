@@ -2,6 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+
     <application
         android:name=".HabitHubApplication"
         android:allowBackup="true"
@@ -12,16 +16,27 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.HabitHub">
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:theme="@style/Theme.HabitHub">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="habithub" android:host="feature_habit" />
+            </intent-filter>
         </activity>
+
+        <receiver
+            android:name="kz.hashiroii.feature.reminders.ReminderReceiver"
+            android:exported="false" />
+
     </application>
 
 </manifest>
