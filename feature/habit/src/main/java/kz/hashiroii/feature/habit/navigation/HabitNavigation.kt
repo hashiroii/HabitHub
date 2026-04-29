@@ -3,7 +3,6 @@ package kz.hashiroii.feature.habit.navigation
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navDeepLink
-import androidx.navigation.toRoute
 import kotlinx.serialization.Serializable
 import kz.hashiroii.feature.habit.add.HabitAddScreen
 import kz.hashiroii.feature.habit.edit.HabitEditScreen
@@ -33,10 +32,8 @@ fun NavGraphBuilder.habitEditScreen(
         deepLinks = listOf(
             navDeepLink { uriPattern = "habithub://feature_habit/edit/{habitId}" },
         ),
-    ) { backStackEntry ->
-        val route = backStackEntry.toRoute<HabitEditRoute>()
+    ) {
         HabitEditScreen(
-            habitId = route.habitId,
             onClose = onClose,
             onNavigateToReminders = onNavigateToReminders,
         )

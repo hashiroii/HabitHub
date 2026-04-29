@@ -40,6 +40,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -53,7 +54,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.TextStyle
-import java.util.Locale
 import kz.hashiroii.core.designsystem.theme.HabitHubTheme
 import kz.hashiroii.core.domain.model.DayActivity
 import kz.hashiroii.core.domain.model.Habit
@@ -64,7 +64,6 @@ import kz.hashiroii.feature.habit.HabitIcons
 
 @Composable
 fun HabitEditScreen(
-    habitId: Long,
     onClose: () -> Unit,
     onNavigateToReminders: (habitId: Long, habitName: String) -> Unit,
     viewModel: HabitEditViewModel = hiltViewModel(),
@@ -315,13 +314,14 @@ private fun MonthCalendar(
     habitColor: Color,
     onDayClick: (Long) -> Unit,
 ) {
+    val locale = LocalConfiguration.current.locales[0]
     val firstDay = yearMonth.atDay(1)
     val daysInMonth = yearMonth.lengthOfMonth()
     val firstDayOfWeek = (firstDay.dayOfWeek.value % 7)
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
-            text = "${yearMonth.month.getDisplayName(TextStyle.FULL, Locale.getDefault())} ${yearMonth.year}",
+            text = "${yearMonth.month.getDisplayName(TextStyle.FULL, locale)} ${yearMonth.year}",
             style = MaterialTheme.typography.titleSmall,
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
@@ -408,6 +408,7 @@ private fun DayDetailDialog(
     onRemove: () -> Unit,
     onDismiss: () -> Unit,
 ) {
+    val locale = LocalConfiguration.current.locales[0]
     val date = remember(epochDay) { LocalDate.ofEpochDay(epochDay) }
 
     Dialog(onDismissRequest = onDismiss) {
@@ -420,7 +421,7 @@ private fun DayDetailDialog(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    text = "${date.dayOfMonth} ${date.month.getDisplayName(TextStyle.FULL, Locale.getDefault())} ${date.year}",
+                    text = "${date.dayOfMonth} ${date.month.getDisplayName(TextStyle.FULL, locale)} ${date.year}",
                     style = MaterialTheme.typography.titleMedium,
                 )
                 Spacer(modifier = Modifier.height(16.dp))
