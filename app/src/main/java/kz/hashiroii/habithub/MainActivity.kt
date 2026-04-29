@@ -39,6 +39,7 @@ private fun HabitHubNavHost() {
     ) {
         homeScreen(
             onAddHabit = { navController.navigate(HabitAddRoute) },
+            onHabitClick = { habitId -> navController.navigate(HabitEditRoute(habitId)) },
         )
         habitAddScreen(
             onClose = { navController.popBackStack() },

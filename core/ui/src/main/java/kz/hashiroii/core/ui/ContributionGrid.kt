@@ -9,8 +9,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -33,13 +37,22 @@ fun ContributionGrid(
     cellSize: Dp = 12.dp,
     cellSpacing: Dp = 3.dp,
 ) {
-    val emptyColor = androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant
+    val emptyColor = MaterialTheme.colorScheme.surfaceVariant
     val cornerRadius = HabitHubTheme.shapes.gridCell
-    val weeks = historyData.chunked(7)
+    val weeks = remember(historyData) { historyData.chunked(7) }
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(weeks.size) {
+        if (weeks.isNotEmpty()) {
+            listState.scrollToItem(weeks.size - 1)
+        }
+    }
 
     LazyRow(
+        state = listState,
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(cellSpacing),
+        userScrollEnabled = true,
     ) {
         items(weeks) { weekDays ->
             Column(verticalArrangement = Arrangement.spacedBy(cellSpacing)) {
@@ -62,7 +75,7 @@ fun ContributionGrid(
     }
 }
 
-private fun sampleHistory(weeks: Int = 18): List<DayProgress> {
+private fun sampleHistory(weeks: Int = 52): List<DayProgress> {
     val pattern = listOf(0, 0, 1, 2, 4, 4, 3)
     return List(weeks * 7) { i ->
         DayProgress(completionCount = pattern[i % pattern.size], goalCount = 4)

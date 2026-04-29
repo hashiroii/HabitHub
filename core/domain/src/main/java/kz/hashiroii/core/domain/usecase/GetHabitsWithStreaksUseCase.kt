@@ -13,7 +13,7 @@ class GetHabitsWithStreaksUseCase @Inject constructor(
     private val repository: HabitRepository,
 ) {
     companion object {
-        private const val GRID_WEEKS = 12
+        private const val GRID_WEEKS = 52
         private const val GRID_DAYS = GRID_WEEKS * 7L
         private const val MILLIS_PER_DAY = 86_400_000L
     }

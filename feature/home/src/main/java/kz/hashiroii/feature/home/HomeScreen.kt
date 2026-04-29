@@ -50,10 +50,16 @@ internal const val TAG_HOME_ERROR = "home_error"
 @Composable
 fun HomeScreen(
     onAddHabit: () -> Unit = {},
+    onHabitClick: (habitId: Long) -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    HomeContent(uiState = uiState, onIntent = viewModel::onIntent, onAddHabit = onAddHabit)
+    HomeContent(
+        uiState = uiState,
+        onIntent = viewModel::onIntent,
+        onAddHabit = onAddHabit,
+        onHabitClick = onHabitClick,
+    )
 }
 
 // ── Internal stateless content ────────────────────────────────────────────────
@@ -63,11 +69,17 @@ internal fun HomeContent(
     uiState: HomeUiState,
     onIntent: (HomeIntent) -> Unit,
     onAddHabit: () -> Unit = {},
+    onHabitClick: (habitId: Long) -> Unit = {},
 ) {
     when (uiState) {
         is HomeUiState.Loading -> LoadingView()
         is HomeUiState.Error -> ErrorView(message = uiState.message)
-        is HomeUiState.Success -> SuccessContent(state = uiState, onIntent = onIntent, onAddHabit = onAddHabit)
+        is HomeUiState.Success -> SuccessContent(
+            state = uiState,
+            onIntent = onIntent,
+            onAddHabit = onAddHabit,
+            onHabitClick = onHabitClick,
+        )
     }
 }
 
@@ -106,6 +118,7 @@ private fun SuccessContent(
     state: HomeUiState.Success,
     onIntent: (HomeIntent) -> Unit,
     onAddHabit: () -> Unit,
+    onHabitClick: (habitId: Long) -> Unit,
 ) {
     Scaffold(
         floatingActionButton = {
@@ -140,6 +153,7 @@ private fun SuccessContent(
                     },
                     onAddClick = { onIntent(HomeIntent.AddCompletion(habitWithStreak.habit.id)) },
                     onMinusClick = { onIntent(HomeIntent.RemoveCompletion(habitWithStreak.habit.id)) },
+                    onCardClick = { onHabitClick(habitWithStreak.habit.id) },
                 )
             }
             item { Spacer(modifier = Modifier.height(HabitHubTheme.spacing.xxLarge)) }
@@ -214,7 +228,7 @@ private fun sampleHabits() = listOf(
     HabitWithStreak(Habit(4L, "Drink Water", colorHex = "#00BCD4", goalCount = 8), 5, 4, sampleGrid()),
 )
 
-private fun sampleGrid() = List(84) { i -> DayActivity(i.toLong(), i % 3, 1) }
+private fun sampleGrid() = List(364) { i -> DayActivity(i.toLong(), i % 3, 1) }
 
 @Preview(name = "Loading · Light", showBackground = true)
 @Composable

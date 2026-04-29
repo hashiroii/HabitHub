@@ -502,7 +502,7 @@ private fun sampleHabitWithStreak() = HabitWithStreak(
     habit = Habit(1L, "Morning Run", colorHex = "#4CAF50", iconName = "DirectionsRun", goalCount = 1),
     streakDays = 5,
     todayCompletionCount = 1,
-    activityGrid = List(84) { i -> DayActivity(i.toLong(), if (i % 3 == 0) 1 else 0, 1) },
+    activityGrid = List(364) { i -> DayActivity(i.toLong(), if (i % 3 == 0) 1 else 0, 1) },
 )
 
 @Preview(name = "Edit · Light", showBackground = true)

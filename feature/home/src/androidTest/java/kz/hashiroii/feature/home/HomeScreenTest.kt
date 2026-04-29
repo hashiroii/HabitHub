@@ -51,7 +51,7 @@ class HomeScreenTest {
                                 habit = Habit(1L, "Morning Run", colorHex = "#4CAF50", goalCount = 1),
                                 streakDays = 3,
                                 todayCompletionCount = 0,
-                                activityGrid = List(84) { i -> DayActivity(i.toLong(), 0, 1) },
+                                activityGrid = List(364) { i -> DayActivity(i.toLong(), 0, 1) },
                             ),
                         ),
                         completedToday = 0,

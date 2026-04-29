@@ -68,7 +68,7 @@ class GetHabitsWithStreaksUseCaseTest {
     fun `activity grid covers exactly 12 weeks`() = runTest {
         fakeRepository.setHabits(listOf(Habit(1L, "Run", colorHex = "#4CAF50", goalCount = 1)))
         useCase().test {
-            assertEquals(84, awaitItem().first().activityGrid.size)
+            assertEquals(364, awaitItem().first().activityGrid.size)
             cancelAndIgnoreRemainingEvents()
         }
     }

@@ -10,8 +10,9 @@ object HomeRoute
 
 fun NavGraphBuilder.homeScreen(
     onAddHabit: () -> Unit = {},
+    onHabitClick: (habitId: Long) -> Unit = {},
 ) {
     composable<HomeRoute> {
-        HomeScreen(onAddHabit = onAddHabit)
+        HomeScreen(onAddHabit = onAddHabit, onHabitClick = onHabitClick)
     }
 }
