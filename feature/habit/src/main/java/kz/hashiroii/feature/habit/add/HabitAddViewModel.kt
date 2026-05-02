@@ -44,6 +44,18 @@ class HabitAddViewModel @Inject constructor(
             is HabitAddIntent.ColorSelected -> _uiState.update {
                 it.copy(selectedColorHex = intent.colorHex)
             }
+            HabitAddIntent.OpenRepetitionDialog -> _uiState.update {
+                it.copy(isRepetitionDialogVisible = true)
+            }
+            is HabitAddIntent.RepetitionCountChanged -> _uiState.update {
+                it.copy(goalCount = intent.count.coerceAtLeast(1))
+            }
+            HabitAddIntent.ConfirmRepetition -> _uiState.update {
+                it.copy(isRepetitionDialogVisible = false)
+            }
+            HabitAddIntent.DismissRepetitionDialog -> _uiState.update {
+                it.copy(isRepetitionDialogVisible = false)
+            }
             HabitAddIntent.SaveClicked -> save()
         }
     }
@@ -62,6 +74,7 @@ class HabitAddViewModel @Inject constructor(
                         description = state.description.trim(),
                         iconName = state.selectedIconName,
                         colorHex = state.selectedColorHex,
+                        goalCount = state.goalCount,
                     ),
                 )
             }.onSuccess {

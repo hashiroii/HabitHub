@@ -5,6 +5,7 @@ data class HabitAddUiState(
     val description: String = "",
     val selectedIconName: String = "Star",
     val selectedColorHex: String = "#4CAF50",
+    val goalCount: Int = 1,
     val isNameError: Boolean = false,
-    val isSaved: Boolean = false,
+    val isRepetitionDialogVisible: Boolean = false,
 )

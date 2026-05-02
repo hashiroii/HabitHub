@@ -43,6 +43,8 @@ fun HabitActivityCard(
     onAddClick: () -> Unit,
     onMinusClick: () -> Unit,
     modifier: Modifier = Modifier,
+    startOffset: Int = 0,
+    scrollToColumn: Int? = null,
     onCardClick: () -> Unit = {},
     icon: @Composable () -> Unit = {},
 ) {
@@ -95,6 +97,8 @@ fun HabitActivityCard(
             ContributionGrid(
                 historyData = historyData,
                 habitColor = habitColor,
+                startOffset = startOffset,
+                scrollToColumn = scrollToColumn,
                 modifier = Modifier.fillMaxWidth(),
             )
         }

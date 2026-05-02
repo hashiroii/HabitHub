@@ -1,6 +1,8 @@
 package kz.hashiroii.feature.habit.edit
 
+import android.content.Intent
 import android.graphics.Color as AndroidColor
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -16,19 +18,21 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -36,15 +40,17 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -60,7 +66,7 @@ import kz.hashiroii.core.domain.model.Habit
 import kz.hashiroii.core.domain.model.HabitWithStreak
 import kz.hashiroii.core.ui.ContributionGrid
 import kz.hashiroii.core.ui.DayProgress
-import kz.hashiroii.feature.habit.HabitIcons
+import kz.hashiroii.core.ui.HabitIcons
 
 @Composable
 fun HabitEditScreen(
@@ -83,12 +89,59 @@ fun HabitEditScreen(
     HabitEditContent(uiState = uiState, onIntent = viewModel::onIntent)
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun HabitEditContent(
     uiState: HabitEditUiState,
     onIntent: (HabitEditIntent) -> Unit,
 ) {
-    Scaffold { paddingValues ->
+    if (uiState is HabitEditUiState.Success) {
+        BackHandler { onIntent(HabitEditIntent.RequestClose) }
+    }
+
+    val successState = uiState as? HabitEditUiState.Success
+    val context = LocalContext.current
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(successState?.habitWithStreak?.habit?.name ?: "Edit Habit")
+                },
+                navigationIcon = {
+                    IconButton(onClick = { onIntent(HabitEditIntent.RequestClose) }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    if (successState != null) {
+                        val habit = successState.habitWithStreak.habit
+                        IconButton(onClick = { onIntent(HabitEditIntent.NavigateToReminders) }) {
+                            Icon(Icons.Default.Notifications, contentDescription = "Reminders")
+                        }
+                        IconButton(onClick = {
+                            val deepLink = "habithub://habit/${habit.id}"
+                            val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_TEXT, deepLink)
+                                putExtra(Intent.EXTRA_TITLE, habit.name)
+                            }
+                            context.startActivity(Intent.createChooser(sendIntent, null))
+                        }) {
+                            Icon(Icons.Default.Share, contentDescription = "Share")
+                        }
+                        IconButton(onClick = { onIntent(HabitEditIntent.DeleteHabit) }) {
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = "Delete habit",
+                                tint = MaterialTheme.colorScheme.error,
+                            )
+                        }
+                    }
+                },
+            )
+        },
+    ) { paddingValues ->
         when (uiState) {
             HabitEditUiState.Loading -> Box(
                 modifier = Modifier
@@ -126,13 +179,19 @@ internal fun HabitEditContent(
             )
         }
 
-        if (uiState.isGoalDialogVisible) {
-            GoalDialog(
-                currentGoal = uiState.pendingGoalCount,
-                onIncrease = { onIntent(HabitEditIntent.GoalChanged(uiState.pendingGoalCount + 1)) },
-                onDecrease = { onIntent(HabitEditIntent.GoalChanged(uiState.pendingGoalCount - 1)) },
-                onConfirm = { onIntent(HabitEditIntent.SaveGoal) },
-                onDismiss = { onIntent(HabitEditIntent.DismissGoalDialog) },
+        if (uiState.isDeleteConfirmVisible) {
+            DeleteConfirmDialog(
+                habitName = uiState.habitWithStreak.habit.name,
+                onConfirm = { onIntent(HabitEditIntent.ConfirmDelete) },
+                onDismiss = { onIntent(HabitEditIntent.DismissDelete) },
+            )
+        }
+
+        if (uiState.isDiscardWarningVisible) {
+            DiscardWarningDialog(
+                onSave = { onIntent(HabitEditIntent.SaveFromDiscardWarning) },
+                onDiscard = { onIntent(HabitEditIntent.DiscardChanges) },
+                onDismiss = { onIntent(HabitEditIntent.SaveFromDiscardWarning) },
             )
         }
     }
@@ -148,20 +207,24 @@ private fun SuccessBody(
     val habitColor = remember(habit.colorHex) {
         runCatching { Color(AndroidColor.parseColor(habit.colorHex)) }.getOrDefault(Color(0xFF4CAF50))
     }
+    val startOffset = remember(state.habitWithStreak.activityGrid) {
+        state.habitWithStreak.activityGrid.firstOrNull()?.let { first ->
+            LocalDate.ofEpochDay(first.dateEpochDay).dayOfWeek.value % 7
+        } ?: 0
+    }
+    val scrollToColumn = remember(startOffset, state.habitWithStreak.activityGrid) {
+        val yearStartDay = state.habitWithStreak.activityGrid.firstOrNull()?.dateEpochDay
+            ?: return@remember null
+        val todayEpochDay = LocalDate.now().toEpochDay()
+        if (todayEpochDay < yearStartDay) return@remember null
+        ((startOffset + (todayEpochDay - yearStartDay)).toInt()) / 7
+    }
 
     Column(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState()),
     ) {
-        EditTopBar(
-            habit = habit,
-            habitColor = habitColor,
-            onReminders = { onIntent(HabitEditIntent.NavigateToReminders) },
-            onShare = {},
-            onClose = { onIntent(HabitEditIntent.Close) },
-        )
-
         Spacer(modifier = Modifier.height(16.dp))
 
         ContributionGrid(
@@ -169,6 +232,8 @@ private fun SuccessBody(
                 DayProgress(it.completionCount, it.goalCount)
             },
             habitColor = habitColor,
+            startOffset = startOffset,
+            scrollToColumn = scrollToColumn,
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
                 .padding(horizontal = 16.dp),
@@ -178,7 +243,6 @@ private fun SuccessBody(
 
         StreakRow(
             streakDays = state.habitWithStreak.streakDays,
-            onChangeClicked = { onIntent(HabitEditIntent.OpenGoalDialog) },
             modifier = Modifier.padding(horizontal = 16.dp),
         )
 
@@ -195,60 +259,23 @@ private fun SuccessBody(
         )
 
         Spacer(modifier = Modifier.height(24.dp))
-    }
-}
 
-@Composable
-private fun EditTopBar(
-    habit: Habit,
-    habitColor: Color,
-    onReminders: () -> Unit,
-    onShare: () -> Unit,
-    onClose: () -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(
-            imageVector = HabitIcons.getIcon(habit.iconName),
-            contentDescription = null,
-            tint = habitColor,
-            modifier = Modifier.size(40.dp),
-        )
-        Spacer(modifier = Modifier.width(12.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = habit.name,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-            )
-            if (habit.description.isNotBlank()) {
-                Text(
-                    text = habit.description,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                )
-            }
+        Button(
+            onClick = { onIntent(HabitEditIntent.Confirm) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+        ) {
+            Text("Confirm")
         }
-        IconButton(onClick = onReminders) {
-            Icon(Icons.Default.Notifications, contentDescription = "Reminders")
-        }
-        IconButton(onClick = onShare) {
-            Icon(Icons.Default.Share, contentDescription = "Share")
-        }
-        IconButton(onClick = onClose) {
-            Icon(Icons.Default.Close, contentDescription = "Close")
-        }
+
+        Spacer(modifier = Modifier.height(24.dp))
     }
 }
 
 @Composable
 private fun StreakRow(
     streakDays: Int,
-    onChangeClicked: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -266,10 +293,6 @@ private fun StreakRow(
             text = "$streakDays day streak",
             style = MaterialTheme.typography.bodyMedium,
         )
-        Spacer(modifier = Modifier.weight(1f))
-        TextButton(onClick = onChangeClicked) {
-            Text("Change")
-        }
     }
 }
 
@@ -468,33 +491,37 @@ private fun DayDetailDialog(
 }
 
 @Composable
-private fun GoalDialog(
-    currentGoal: Int,
-    onIncrease: () -> Unit,
-    onDecrease: () -> Unit,
+private fun DeleteConfirmDialog(
+    habitName: String,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Daily goal") },
-        text = {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                TextButton(onClick = onDecrease, enabled = currentGoal > 1) { Text("−") }
-                Text(
-                    text = currentGoal.toString(),
-                    style = MaterialTheme.typography.headlineMedium,
-                    modifier = Modifier.padding(horizontal = 24.dp),
-                )
-                TextButton(onClick = onIncrease) { Text("+") }
-            }
+        title = { Text("Delete habit") },
+        text = { Text("\"$habitName\" and all its history will be permanently deleted.") },
+        confirmButton = {
+            TextButton(
+                onClick = onConfirm,
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+            ) { Text("Delete") }
         },
-        confirmButton = { TextButton(onClick = onConfirm) { Text("OK") } },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+    )
+}
+
+@Composable
+private fun DiscardWarningDialog(
+    onSave: () -> Unit,
+    onDiscard: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Unsaved changes") },
+        text = { Text("You have unsaved changes. Would you like to save them before leaving?") },
+        confirmButton = { TextButton(onClick = onSave) { Text("Save") } },
+        dismissButton = { TextButton(onClick = onDiscard) { Text("Discard") } },
     )
 }
 

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,34 +16,47 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kz.hashiroii.core.designsystem.theme.HabitHubTheme
-import kz.hashiroii.feature.habit.HabitIcons
-import kz.hashiroii.feature.habit.habitColors
+import kz.hashiroii.core.ui.HabitIcons
+import kz.hashiroii.core.ui.habitColors
 
 @Composable
 fun HabitAddScreen(
@@ -59,17 +73,30 @@ fun HabitAddScreen(
         }
     }
 
-    HabitAddContent(uiState = uiState, onIntent = viewModel::onIntent)
+    HabitAddContent(uiState = uiState, onIntent = viewModel::onIntent, onClose = onClose)
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun HabitAddContent(
     uiState: HabitAddUiState,
     onIntent: (HabitAddIntent) -> Unit,
+    onClose: () -> Unit = {},
 ) {
     val selectedColor = rememberHabitColor(uiState.selectedColorHex)
 
-    Scaffold { paddingValues ->
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Add Habit") },
+                navigationIcon = {
+                    IconButton(onClick = onClose) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+            )
+        },
+    ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -139,6 +166,17 @@ internal fun HabitAddContent(
                     onColorSelected = { onIntent(HabitAddIntent.ColorSelected(it)) },
                 )
 
+                Spacer(modifier = Modifier.height(24.dp))
+
+                RepetitionRow(
+                    goalCount = uiState.goalCount,
+                    onClick = { onIntent(HabitAddIntent.OpenRepetitionDialog) },
+                )
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                RepetitionWarning()
+
                 Spacer(modifier = Modifier.height(32.dp))
 
                 Button(
@@ -149,6 +187,166 @@ internal fun HabitAddContent(
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
+            }
+        }
+    }
+
+    if (uiState.isRepetitionDialogVisible) {
+        RepetitionDialog(
+            goalCount = uiState.goalCount,
+            habitColor = selectedColor,
+            onIncrease = { onIntent(HabitAddIntent.RepetitionCountChanged(uiState.goalCount + 1)) },
+            onDecrease = { onIntent(HabitAddIntent.RepetitionCountChanged(uiState.goalCount - 1)) },
+            onConfirm = { onIntent(HabitAddIntent.ConfirmRepetition) },
+            onDismiss = { onIntent(HabitAddIntent.DismissRepetitionDialog) },
+        )
+    }
+}
+
+@Composable
+private fun RepetitionRow(
+    goalCount: Int,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = "Daily repetitions",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+            )
+            Text(
+                text = if (goalCount == 1) "Once per day" else "$goalCount times per day",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+            )
+        }
+        Text(
+            text = goalCount.toString(),
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary,
+        )
+    }
+}
+
+@Composable
+private fun RepetitionWarning() {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = Icons.Default.Info,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f),
+            modifier = Modifier.size(14.dp),
+        )
+        Spacer(modifier = Modifier.width(6.dp))
+        Text(
+            text = "Repetition count cannot be changed after creation",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f),
+        )
+    }
+}
+
+@Composable
+private fun RepetitionDialog(
+    goalCount: Int,
+    habitColor: Color,
+    onIncrease: () -> Unit,
+    onDecrease: () -> Unit,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val emptyColor = MaterialTheme.colorScheme.surfaceVariant
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(20.dp),
+            tonalElevation = 4.dp,
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    text = "Daily repetitions",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // Grid preview: goalCount+1 cells from saturation 0 to 1
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    val totalCells = goalCount + 1
+                    repeat(totalCells) { index ->
+                        val saturation = index.toFloat() / goalCount.coerceAtLeast(1)
+                        Box(
+                            modifier = Modifier
+                                .size(28.dp)
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(lerp(emptyColor, habitColor, saturation)),
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = if (goalCount == 1) "Once per day" else "$goalCount times per day",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(24.dp),
+                ) {
+                    TextButton(
+                        onClick = onDecrease,
+                        enabled = goalCount > 1,
+                    ) {
+                        Text(
+                            text = "−",
+                            style = MaterialTheme.typography.headlineMedium,
+                        )
+                    }
+                    Text(
+                        text = goalCount.toString(),
+                        style = MaterialTheme.typography.displaySmall,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    TextButton(onClick = onIncrease) {
+                        Text(
+                            text = "+",
+                            style = MaterialTheme.typography.headlineMedium,
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Button(
+                    onClick = onConfirm,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("Confirm")
+                }
             }
         }
     }
@@ -269,7 +467,7 @@ private fun ColorPickerGrid(
 
 @Composable
 private fun rememberHabitColor(hex: String): Color =
-    androidx.compose.runtime.remember(hex) {
+    remember(hex) {
         runCatching { Color(AndroidColor.parseColor(hex)) }.getOrDefault(Color(0xFF4CAF50))
     }
 
@@ -291,6 +489,36 @@ private fun HabitAddDarkPreview() {
         HabitAddContent(
             uiState = HabitAddUiState(name = "Meditate", selectedIconName = "SelfImprovement", selectedColorHex = "#9C27B0"),
             onIntent = {},
+        )
+    }
+}
+
+@Preview(name = "Repetition Dialog · goalCount=1", showBackground = true)
+@Composable
+private fun RepetitionDialogPreview1() {
+    HabitHubTheme(darkTheme = false) {
+        RepetitionDialog(
+            goalCount = 1,
+            habitColor = Color(0xFF4CAF50),
+            onIncrease = {},
+            onDecrease = {},
+            onConfirm = {},
+            onDismiss = {},
+        )
+    }
+}
+
+@Preview(name = "Repetition Dialog · goalCount=4", showBackground = true)
+@Composable
+private fun RepetitionDialogPreview4() {
+    HabitHubTheme(darkTheme = false) {
+        RepetitionDialog(
+            goalCount = 4,
+            habitColor = Color(0xFF2196F3),
+            onIncrease = {},
+            onDecrease = {},
+            onConfirm = {},
+            onDismiss = {},
         )
     }
 }

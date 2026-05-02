@@ -1,4 +1,4 @@
-package kz.hashiroii.feature.habit
+package kz.hashiroii.core.ui
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bedtime

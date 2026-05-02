@@ -9,8 +9,9 @@ sealed interface HabitEditUiState {
         val completionsByDay: Map<Long, Int>,
         val selectedDayEpochDay: Long? = null,
         val selectedDayCompletionCount: Int = 0,
-        val isGoalDialogVisible: Boolean = false,
-        val pendingGoalCount: Int = 1,
+        val hasChanges: Boolean = false,
+        val isDeleteConfirmVisible: Boolean = false,
+        val isDiscardWarningVisible: Boolean = false,
     ) : HabitEditUiState
     data class Error(val message: String) : HabitEditUiState
 }

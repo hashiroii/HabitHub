@@ -29,8 +29,9 @@ sealed interface HabitEditEvent {
 
 private data class EphemeralState(
     val selectedDayEpochDay: Long? = null,
-    val isGoalDialogVisible: Boolean = false,
-    val pendingGoalCount: Int = 1,
+    val hasChanges: Boolean = false,
+    val isDeleteConfirmVisible: Boolean = false,
+    val isDiscardWarningVisible: Boolean = false,
 )
 
 @HiltViewModel
@@ -65,8 +66,9 @@ class HabitEditViewModel @Inject constructor(
             completionsByDay = completionsByDay,
             selectedDayEpochDay = ephemeral.selectedDayEpochDay,
             selectedDayCompletionCount = completionsByDay[ephemeral.selectedDayEpochDay ?: -1L] ?: 0,
-            isGoalDialogVisible = ephemeral.isGoalDialogVisible,
-            pendingGoalCount = ephemeral.pendingGoalCount,
+            hasChanges = ephemeral.hasChanges,
+            isDeleteConfirmVisible = ephemeral.isDeleteConfirmVisible,
+            isDiscardWarningVisible = ephemeral.isDiscardWarningVisible,
         )
     }
         .catch { e -> emit(HabitEditUiState.Error(e.message ?: "Unexpected error")) }
@@ -81,28 +83,51 @@ class HabitEditViewModel @Inject constructor(
             is HabitEditIntent.SelectDay -> _ephemeral.update {
                 it.copy(selectedDayEpochDay = intent.epochDay)
             }
-            is HabitEditIntent.AddCompletionForDay -> dispatchIO {
-                repository.addCompletionForDay(
-                    habitId = habitId,
-                    timestampMillis = intent.epochDay * 86_400_000L + 43_200_000L,
-                )
+            is HabitEditIntent.AddCompletionForDay -> {
+                _ephemeral.update { it.copy(hasChanges = true) }
+                dispatchIO {
+                    repository.addCompletionForDay(
+                        habitId = habitId,
+                        timestampMillis = intent.epochDay * 86_400_000L + 43_200_000L,
+                    )
+                }
             }
-            is HabitEditIntent.RemoveCompletionForDay -> dispatchIO {
-                repository.removeCompletionForDay(habitId, intent.epochDay)
+            is HabitEditIntent.RemoveCompletionForDay -> {
+                _ephemeral.update { it.copy(hasChanges = true) }
+                dispatchIO { repository.removeCompletionForDay(habitId, intent.epochDay) }
             }
             HabitEditIntent.DismissDayDialog -> _ephemeral.update {
                 it.copy(selectedDayEpochDay = null)
             }
-            HabitEditIntent.OpenGoalDialog -> {
-                val goalCount = (uiState.value as? HabitEditUiState.Success)
-                    ?.habitWithStreak?.habit?.goalCount ?: 1
-                _ephemeral.update { it.copy(isGoalDialogVisible = true, pendingGoalCount = goalCount) }
+            HabitEditIntent.Confirm -> close()
+            HabitEditIntent.RequestClose -> {
+                if (_ephemeral.value.hasChanges) {
+                    _ephemeral.update { it.copy(isDiscardWarningVisible = true) }
+                } else {
+                    close()
+                }
             }
-            is HabitEditIntent.GoalChanged -> _ephemeral.update {
-                it.copy(pendingGoalCount = intent.count.coerceAtLeast(1))
+            HabitEditIntent.DeleteHabit -> _ephemeral.update {
+                it.copy(isDeleteConfirmVisible = true)
             }
-            HabitEditIntent.SaveGoal -> _ephemeral.update { it.copy(isGoalDialogVisible = false) }
-            HabitEditIntent.DismissGoalDialog -> _ephemeral.update { it.copy(isGoalDialogVisible = false) }
+            HabitEditIntent.ConfirmDelete -> {
+                _ephemeral.update { it.copy(isDeleteConfirmVisible = false) }
+                dispatchIO {
+                    repository.deleteHabit(habitId)
+                    _events.send(HabitEditEvent.Close)
+                }
+            }
+            HabitEditIntent.DismissDelete -> _ephemeral.update {
+                it.copy(isDeleteConfirmVisible = false)
+            }
+            HabitEditIntent.SaveFromDiscardWarning -> {
+                _ephemeral.update { it.copy(isDiscardWarningVisible = false) }
+                close()
+            }
+            HabitEditIntent.DiscardChanges -> {
+                _ephemeral.update { it.copy(isDiscardWarningVisible = false, hasChanges = false) }
+                close()
+            }
             HabitEditIntent.NavigateToReminders -> {
                 val state = uiState.value as? HabitEditUiState.Success ?: return
                 viewModelScope.launch {
@@ -114,10 +139,11 @@ class HabitEditViewModel @Inject constructor(
                     )
                 }
             }
-            HabitEditIntent.Close -> viewModelScope.launch {
-                _events.send(HabitEditEvent.Close)
-            }
         }
+    }
+
+    private fun close() {
+        viewModelScope.launch { _events.send(HabitEditEvent.Close) }
     }
 
     private inline fun dispatchIO(crossinline block: suspend () -> Unit) {
