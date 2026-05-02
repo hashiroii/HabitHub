@@ -41,6 +41,7 @@ android {
 
 dependencies {
     implementation(projects.core.designsystem)
+    implementation(libs.androidx.appcompat)
     implementation(projects.core.ui)
     implementation(projects.core.domain)
 
@@ -61,6 +62,7 @@ dependencies {
     implementation(libs.lifecycle.viewmodel.ktx)
 
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.activity.compose)
 
     testImplementation(libs.junit)
     testImplementation(kotlin("test"))

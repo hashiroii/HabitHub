@@ -11,8 +11,9 @@ object HomeRoute
 fun NavGraphBuilder.homeScreen(
     onAddHabit: () -> Unit = {},
     onHabitClick: (habitId: Long) -> Unit = {},
+    onSettingsClick: () -> Unit = {},
 ) {
     composable<HomeRoute> {
-        HomeScreen(onAddHabit = onAddHabit, onHabitClick = onHabitClick)
+        HomeScreen(onAddHabit = onAddHabit, onHabitClick = onHabitClick, onSettingsClick = onSettingsClick)
     }
 }

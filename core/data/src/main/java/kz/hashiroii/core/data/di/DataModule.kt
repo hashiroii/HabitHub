@@ -12,8 +12,10 @@ import javax.inject.Singleton
 import kz.hashiroii.core.data.database.HabitHubDatabase
 import kz.hashiroii.core.data.database.dao.HabitCompletionDao
 import kz.hashiroii.core.data.database.dao.HabitDao
+import kz.hashiroii.core.data.preferences.AppPreferencesRepository
 import kz.hashiroii.core.data.repository.HabitRepositoryImpl
 import kz.hashiroii.core.domain.repository.HabitRepository
+import kz.hashiroii.core.domain.repository.PreferencesRepository
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -22,6 +24,10 @@ abstract class DataModule {
     @Binds
     @Singleton
     abstract fun bindHabitRepository(impl: HabitRepositoryImpl): HabitRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindPreferencesRepository(impl: AppPreferencesRepository): PreferencesRepository
 
     companion object {
         @Provides
