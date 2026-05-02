@@ -30,6 +30,24 @@ android {
             )
         }
     }
+
+    flavorDimensions += "stage"
+
+    productFlavors {
+        create("dev") {
+            dimension = "stage"
+            applicationIdSuffix = ".dev"
+            versionNameSuffix = "-dev"
+            buildConfigField("Boolean", "IS_DEV_BUILD", "true")
+            buildConfigField("String", "API_BASE_URL", "\"https://dev.api.example.com\"")
+        }
+        create("prod") {
+            dimension = "stage"
+            buildConfigField("Boolean", "IS_DEV_BUILD", "false")
+            buildConfigField("String", "API_BASE_URL", "\"https://api.example.com\"")
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -39,6 +57,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -50,6 +69,7 @@ dependencies {
     implementation(projects.feature.reminders)
     implementation(libs.androidx.navigation.compose)
 
+    implementation(libs.androidx.appcompat)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)

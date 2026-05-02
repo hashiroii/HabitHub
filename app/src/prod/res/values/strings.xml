@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Prod-specific string overrides go here. -->
+<!-- app_name is inherited from main/res/values/strings.xml -->
+<resources/>
