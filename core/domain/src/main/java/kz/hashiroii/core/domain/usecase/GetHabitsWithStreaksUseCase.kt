@@ -1,8 +1,11 @@
 package kz.hashiroii.core.domain.usecase
 
+import java.time.LocalDate
 import javax.inject.Inject
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
 import kz.hashiroii.core.domain.model.DayActivity
 import kz.hashiroii.core.domain.model.Habit
 import kz.hashiroii.core.domain.model.HabitCompletion
@@ -13,8 +16,6 @@ class GetHabitsWithStreaksUseCase @Inject constructor(
     private val repository: HabitRepository,
 ) {
     companion object {
-        private const val GRID_WEEKS = 52
-        private const val GRID_DAYS = GRID_WEEKS * 7L
         private const val MILLIS_PER_DAY = 86_400_000L
     }
 
@@ -23,22 +24,23 @@ class GetHabitsWithStreaksUseCase @Inject constructor(
             repository.observeHabits(),
             repository.observeAllCompletions(),
         ) { habits, completions ->
-            val todayEpochDay = epochDay(System.currentTimeMillis())
-            val gridStartDay = todayEpochDay - GRID_DAYS + 1
+            val today = LocalDate.now()
+            val todayEpochDay = today.toEpochDay()
+            val yearStart = LocalDate.of(today.year, 1, 1).toEpochDay()
+            val yearEnd = LocalDate.of(today.year, 12, 31).toEpochDay()
             habits.map { habit ->
                 val habitCompletions = completions.filter { it.habitId == habit.id }
                 HabitWithStreak(
                     habit = habit,
-                    streakDays = computeStreak(habitCompletions),
+                    streakDays = computeStreak(habitCompletions, todayEpochDay),
                     todayCompletionCount = countToday(habitCompletions, todayEpochDay),
-                    activityGrid = buildActivityGrid(habit, habitCompletions, gridStartDay, todayEpochDay),
+                    activityGrid = buildActivityGrid(habit, habitCompletions, yearStart, yearEnd),
                 )
             }
-        }
+        }.flowOn(Dispatchers.Default)
 
-    private fun computeStreak(completions: List<HabitCompletion>): Int {
+    private fun computeStreak(completions: List<HabitCompletion>, today: Long): Int {
         val completedDays = completions.map { epochDay(it.completedAt) }.toSet()
-        val today = epochDay(System.currentTimeMillis())
         val startDay = when {
             today in completedDays -> today
             (today - 1) in completedDays -> today - 1

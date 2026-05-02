@@ -16,16 +16,21 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -35,12 +40,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import java.time.LocalDate
 import kz.hashiroii.core.designsystem.theme.HabitHubTheme
 import kz.hashiroii.core.domain.model.DayActivity
 import kz.hashiroii.core.domain.model.Habit
 import kz.hashiroii.core.domain.model.HabitWithStreak
 import kz.hashiroii.core.ui.DayProgress
 import kz.hashiroii.core.ui.HabitActivityCard
+import kz.hashiroii.core.ui.HabitIcons
 
 internal const val TAG_HOME_LOADING = "home_loading"
 internal const val TAG_HOME_ERROR = "home_error"
@@ -51,14 +58,17 @@ internal const val TAG_HOME_ERROR = "home_error"
 fun HomeScreen(
     onAddHabit: () -> Unit = {},
     onHabitClick: (habitId: Long) -> Unit = {},
+    onSettingsClick: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val onIntent = remember { viewModel::onIntent }
     HomeContent(
         uiState = uiState,
-        onIntent = viewModel::onIntent,
+        onIntent = onIntent,
         onAddHabit = onAddHabit,
         onHabitClick = onHabitClick,
+        onSettingsClick = onSettingsClick,
     )
 }
 
@@ -70,6 +80,7 @@ internal fun HomeContent(
     onIntent: (HomeIntent) -> Unit,
     onAddHabit: () -> Unit = {},
     onHabitClick: (habitId: Long) -> Unit = {},
+    onSettingsClick: () -> Unit = {},
 ) {
     when (uiState) {
         is HomeUiState.Loading -> LoadingView()
@@ -79,6 +90,7 @@ internal fun HomeContent(
             onIntent = onIntent,
             onAddHabit = onAddHabit,
             onHabitClick = onHabitClick,
+            onSettingsClick = onSettingsClick,
         )
     }
 }
@@ -113,14 +125,29 @@ private fun ErrorView(message: String) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SuccessContent(
     state: HomeUiState.Success,
     onIntent: (HomeIntent) -> Unit,
     onAddHabit: () -> Unit,
     onHabitClick: (habitId: Long) -> Unit,
+    onSettingsClick: () -> Unit,
 ) {
     Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("HabitHub") },
+                actions = {
+                    IconButton(onClick = onSettingsClick) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Settings",
+                        )
+                    }
+                },
+            )
+        },
         floatingActionButton = {
             FloatingActionButton(onClick = onAddHabit) {
                 Icon(imageVector = Icons.Default.Add, contentDescription = "Add Habit")
@@ -141,19 +168,52 @@ private fun SuccessContent(
                     totalHabits = state.totalHabits,
                     overallStreakDays = state.overallStreakDays,
                 )
+                Spacer(modifier = Modifier.height(HabitHubTheme.spacing.xLarge))
             }
             items(state.habits, key = { it.habit.id }) { habitWithStreak ->
+                val habitId = habitWithStreak.habit.id
+                val habitColor = remember(habitWithStreak.habit.colorHex) {
+                    habitWithStreak.habit.colorHex.toComposeColor()
+                }
+                val startOffset = remember(habitWithStreak.activityGrid) {
+                    habitWithStreak.activityGrid.firstOrNull()?.let { first ->
+                        LocalDate.ofEpochDay(first.dateEpochDay).dayOfWeek.value % 7
+                    } ?: 0
+                }
+                val scrollToColumn = remember(startOffset, habitWithStreak.activityGrid) {
+                    val yearStartDay = habitWithStreak.activityGrid.firstOrNull()?.dateEpochDay
+                        ?: return@remember null
+                    val todayEpochDay = LocalDate.now().toEpochDay()
+                    if (todayEpochDay < yearStartDay) return@remember null
+                    ((startOffset + (todayEpochDay - yearStartDay)).toInt()) / 7
+                }
+                val historyData = remember(habitWithStreak.activityGrid) {
+                    habitWithStreak.activityGrid.map { day ->
+                        DayProgress(completionCount = day.completionCount, goalCount = day.goalCount)
+                    }
+                }
+                val onAddClick = remember(habitId) { { onIntent(HomeIntent.AddCompletion(habitId)) } }
+                val onMinusClick = remember(habitId) { { onIntent(HomeIntent.RemoveCompletion(habitId)) } }
+                val onCardClick = remember(habitId) { { onHabitClick(habitId) } }
                 HabitActivityCard(
                     habitName = habitWithStreak.habit.name,
-                    habitColor = habitWithStreak.habit.colorHex.toComposeColor(),
+                    habitColor = habitColor,
                     currentCount = habitWithStreak.todayCompletionCount,
                     goalCount = habitWithStreak.habit.goalCount,
-                    historyData = habitWithStreak.activityGrid.map { day ->
-                        DayProgress(completionCount = day.completionCount, goalCount = day.goalCount)
+                    historyData = historyData,
+                    startOffset = startOffset,
+                    scrollToColumn = scrollToColumn,
+                    onAddClick = onAddClick,
+                    onMinusClick = onMinusClick,
+                    onCardClick = onCardClick,
+                    icon = {
+                        Icon(
+                            imageVector = HabitIcons.getIcon(habitWithStreak.habit.iconName),
+                            contentDescription = null,
+                            tint = habitColor,
+                            modifier = Modifier.size(24.dp),
+                        )
                     },
-                    onAddClick = { onIntent(HomeIntent.AddCompletion(habitWithStreak.habit.id)) },
-                    onMinusClick = { onIntent(HomeIntent.RemoveCompletion(habitWithStreak.habit.id)) },
-                    onCardClick = { onHabitClick(habitWithStreak.habit.id) },
                 )
             }
             item { Spacer(modifier = Modifier.height(HabitHubTheme.spacing.xxLarge)) }
@@ -169,8 +229,7 @@ private fun SummaryCard(
     totalHabits: Int,
     overallStreakDays: Int,
 ) {
-    val isAllComplete = totalHabits > 0 && completedToday == totalHabits
-    val fireColor = if (isAllComplete) MaterialTheme.colorScheme.primary
+    val fireColor = if (overallStreakDays > 0) MaterialTheme.colorScheme.primary
                     else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f)
 
     Card(
