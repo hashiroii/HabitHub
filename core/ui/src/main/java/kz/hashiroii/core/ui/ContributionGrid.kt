@@ -1,27 +1,23 @@
 package kz.hashiroii.core.ui
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.scrollBy
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshotFlow
-import kotlinx.coroutines.flow.first
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -43,51 +39,53 @@ fun ContributionGrid(
     scrollToColumn: Int? = null,
 ) {
     val emptyColor = MaterialTheme.colorScheme.surfaceVariant
-    val cornerRadius = HabitHubTheme.shapes.gridCell
+    val cornerRadiusDp = HabitHubTheme.shapes.gridCell
+
     val weeks = remember(historyData, startOffset) {
         val padded: List<DayProgress?> = List(startOffset) { null } + historyData
         padded.chunked(7)
     }
-    val listState = rememberLazyListState()
 
-    LaunchedEffect(weeks.size, scrollToColumn) {
-        if (weeks.isEmpty()) return@LaunchedEffect
-        val target = scrollToColumn?.coerceIn(0, weeks.size - 1) ?: (weeks.size - 1)
-        listState.scrollToItem(target)
-        val info = snapshotFlow { listState.layoutInfo }
-            .first { it.visibleItemsInfo.isNotEmpty() && it.viewportSize.width > 0 }
-        val viewportWidth = info.viewportSize.width
-        val itemSize = info.visibleItemsInfo.firstOrNull { it.index == target }?.size
-        if (viewportWidth > 0 && itemSize != null) {
-            listState.scrollBy(-(viewportWidth / 2f - itemSize / 2f).coerceAtLeast(0f))
-        }
+    val density = LocalDensity.current
+    val cellSizePx = with(density) { cellSize.toPx() }
+    val cellSpacingPx = with(density) { cellSpacing.toPx() }
+    val cellStepPx = cellSizePx + cellSpacingPx
+    val cornerRadiusPx = with(density) { cornerRadiusDp.toPx() }
+
+    val gridWidthDp = with(density) {
+        if (weeks.isEmpty()) 0.dp else (weeks.size * cellStepPx - cellSpacingPx).toDp()
     }
+    val gridHeightDp = with(density) { (7 * cellStepPx - cellSpacingPx).toDp() }
 
-    LazyRow(
-        state = listState,
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(cellSpacing),
-        userScrollEnabled = true,
-    ) {
-        items(weeks) { weekDays ->
-            Column(verticalArrangement = Arrangement.spacedBy(cellSpacing)) {
-                weekDays.forEach { day ->
-                    if (day == null) {
-                        Spacer(modifier = Modifier.size(cellSize))
-                    } else {
-                        val saturation = if (day.goalCount <= 0) 0f
-                        else (day.completionCount.toFloat() / day.goalCount).coerceIn(0f, 1f)
+    val scrollState = rememberScrollState()
 
-                        Box(
-                            modifier = Modifier
-                                .size(cellSize)
-                                .clip(RoundedCornerShape(cornerRadius))
-                                .background(lerp(emptyColor, habitColor, saturation)),
-                        )
-                    }
-                }
-                repeat(7 - weekDays.size) {
-                    Spacer(modifier = Modifier.size(cellSize))
+    BoxWithConstraints(modifier = modifier) {
+        val viewportWidthPx = constraints.maxWidth.toFloat()
+
+        LaunchedEffect(weeks.size, scrollToColumn) {
+            if (weeks.isEmpty()) return@LaunchedEffect
+            val target = scrollToColumn?.coerceIn(0, weeks.size - 1) ?: (weeks.size - 1)
+            val centerOffset = (viewportWidthPx / 2f - cellSizePx / 2f).coerceAtLeast(0f)
+            scrollState.scrollTo((target * cellStepPx - centerOffset).toInt().coerceAtLeast(0))
+        }
+
+        Canvas(
+            modifier = Modifier
+                .height(gridHeightDp)
+                .horizontalScroll(scrollState)
+                .width(gridWidthDp),
+        ) {
+            weeks.forEachIndexed { colIndex, week ->
+                week.forEachIndexed { rowIndex, day ->
+                    if (day == null) return@forEachIndexed
+                    val saturation = if (day.goalCount <= 0) 0f
+                    else (day.completionCount.toFloat() / day.goalCount).coerceIn(0f, 1f)
+                    drawRoundRect(
+                        color = lerp(emptyColor, habitColor, saturation),
+                        topLeft = Offset(colIndex * cellStepPx, rowIndex * cellStepPx),
+                        size = Size(cellSizePx, cellSizePx),
+                        cornerRadius = CornerRadius(cornerRadiusPx),
+                    )
                 }
             }
         }

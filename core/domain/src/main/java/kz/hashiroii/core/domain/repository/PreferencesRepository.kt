@@ -6,4 +6,5 @@ import kz.hashiroii.core.domain.model.ThemePreference
 interface PreferencesRepository {
     val themePreference: Flow<ThemePreference>
     suspend fun setThemePreference(theme: ThemePreference)
+    fun getInitialThemeBlocking(): ThemePreference
 }

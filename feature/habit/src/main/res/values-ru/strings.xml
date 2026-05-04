@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="habit_back">Назад</string>
+    <string name="habit_confirm">Подтвердить</string>
+    <string name="habit_cancel">Отмена</string>
+    <string name="habit_done">Готово</string>
+    <string name="habit_add_title">Новая привычка</string>
+    <string name="habit_name_label">Название</string>
+    <string name="habit_name_error">Название не может быть пустым</string>
+    <string name="habit_description_label">Описание (необязательно)</string>
+    <string name="habit_icon_label">Значок</string>
+    <string name="habit_color_label">Цвет</string>
+    <string name="habit_daily_repetitions">Повторений в день</string>
+    <string name="habit_repetitions_once">Один раз в день</string>
+    <string name="habit_repetitions_many">%d раза в день</string>
+    <string name="habit_repetitions_warning">Количество повторений нельзя изменить после создания</string>
+    <string name="habit_save">Сохранить привычку</string>
+    <string name="habit_edit_title">Изменить привычку</string>
+    <string name="habit_reminders_desc">Напоминания</string>
+    <string name="habit_share_desc">Поделиться</string>
+    <string name="habit_delete_desc">Удалить привычку</string>
+    <string name="habit_streak_days">%d дней подряд</string>
+    <string name="habit_completions">выполнений</string>
+    <string name="habit_delete_title">Удалить привычку</string>
+    <string name="habit_delete_message">\"%s\" и вся история будут безвозвратно удалены.</string>
+    <string name="habit_delete_confirm">Удалить</string>
+    <string name="habit_unsaved_title">Несохранённые изменения</string>
+    <string name="habit_unsaved_message">Есть несохранённые изменения. Сохранить перед выходом?</string>
+    <string name="habit_save_changes">Сохранить</string>
+    <string name="habit_discard">Не сохранять</string>
+</resources>

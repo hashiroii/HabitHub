@@ -57,6 +57,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.res.stringResource
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.TextStyle
@@ -67,6 +69,7 @@ import kz.hashiroii.core.domain.model.HabitWithStreak
 import kz.hashiroii.core.ui.ContributionGrid
 import kz.hashiroii.core.ui.DayProgress
 import kz.hashiroii.core.ui.HabitIcons
+import kz.hashiroii.feature.habit.R
 
 @Composable
 fun HabitEditScreen(
@@ -106,18 +109,18 @@ internal fun HabitEditContent(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(successState?.habitWithStreak?.habit?.name ?: "Edit Habit")
+                    Text(successState?.habitWithStreak?.habit?.name ?: stringResource(R.string.habit_edit_title))
                 },
                 navigationIcon = {
                     IconButton(onClick = { onIntent(HabitEditIntent.RequestClose) }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.habit_back))
                     }
                 },
                 actions = {
                     if (successState != null) {
                         val habit = successState.habitWithStreak.habit
                         IconButton(onClick = { onIntent(HabitEditIntent.NavigateToReminders) }) {
-                            Icon(Icons.Default.Notifications, contentDescription = "Reminders")
+                            Icon(Icons.Default.Notifications, contentDescription = stringResource(R.string.habit_reminders_desc))
                         }
                         IconButton(onClick = {
                             val deepLink = "habithub://habit/${habit.id}"
@@ -128,12 +131,12 @@ internal fun HabitEditContent(
                             }
                             context.startActivity(Intent.createChooser(sendIntent, null))
                         }) {
-                            Icon(Icons.Default.Share, contentDescription = "Share")
+                            Icon(Icons.Default.Share, contentDescription = stringResource(R.string.habit_share_desc))
                         }
                         IconButton(onClick = { onIntent(HabitEditIntent.DeleteHabit) }) {
                             Icon(
                                 Icons.Default.Delete,
-                                contentDescription = "Delete habit",
+                                contentDescription = stringResource(R.string.habit_delete_desc),
                                 tint = MaterialTheme.colorScheme.error,
                             )
                         }
@@ -266,7 +269,7 @@ private fun SuccessBody(
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
         ) {
-            Text("Confirm")
+            Text(stringResource(R.string.habit_confirm))
         }
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -290,7 +293,7 @@ private fun StreakRow(
         )
         Spacer(modifier = Modifier.width(4.dp))
         Text(
-            text = "$streakDays day streak",
+            text = stringResource(R.string.habit_streak_days, streakDays),
             style = MaterialTheme.typography.bodyMedium,
         )
     }
@@ -351,13 +354,21 @@ private fun MonthCalendar(
                 .padding(vertical = 8.dp),
         )
 
+        val dayHeaders = remember(locale) {
+            (0..6).map { i ->
+                val dow = if (i == 0) DayOfWeek.SUNDAY else DayOfWeek.of(i)
+                dow.getDisplayName(TextStyle.NARROW, locale)
+                    .take(2)
+                    .replaceFirstChar { it.uppercaseChar() }
+            }
+        }
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 4.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
-            listOf("S", "M", "T", "W", "T", "F", "S").forEach { label ->
+            dayHeaders.forEach { label ->
                 Text(
                     text = label,
                     style = MaterialTheme.typography.labelSmall,
@@ -454,7 +465,7 @@ private fun DayDetailDialog(
                     fontWeight = FontWeight.Bold,
                 )
                 Text(
-                    text = "completions",
+                    text = stringResource(R.string.habit_completions),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                 )
@@ -484,7 +495,7 @@ private fun DayDetailDialog(
                     }
                 }
                 Spacer(modifier = Modifier.height(12.dp))
-                TextButton(onClick = onDismiss) { Text("Done") }
+                TextButton(onClick = onDismiss) { Text(stringResource(R.string.habit_done)) }
             }
         }
     }
@@ -498,15 +509,15 @@ private fun DeleteConfirmDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Delete habit") },
-        text = { Text("\"$habitName\" and all its history will be permanently deleted.") },
+        title = { Text(stringResource(R.string.habit_delete_title)) },
+        text = { Text(stringResource(R.string.habit_delete_message, habitName)) },
         confirmButton = {
             TextButton(
                 onClick = onConfirm,
                 colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
-            ) { Text("Delete") }
+            ) { Text(stringResource(R.string.habit_delete_confirm)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.habit_cancel)) } },
     )
 }
 
@@ -518,10 +529,10 @@ private fun DiscardWarningDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Unsaved changes") },
-        text = { Text("You have unsaved changes. Would you like to save them before leaving?") },
-        confirmButton = { TextButton(onClick = onSave) { Text("Save") } },
-        dismissButton = { TextButton(onClick = onDiscard) { Text("Discard") } },
+        title = { Text(stringResource(R.string.habit_unsaved_title)) },
+        text = { Text(stringResource(R.string.habit_unsaved_message)) },
+        confirmButton = { TextButton(onClick = onSave) { Text(stringResource(R.string.habit_save_changes)) } },
+        dismissButton = { TextButton(onClick = onDiscard) { Text(stringResource(R.string.habit_discard)) } },
     )
 }
 

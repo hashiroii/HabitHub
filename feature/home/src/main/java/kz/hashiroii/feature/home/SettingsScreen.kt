@@ -6,9 +6,11 @@ import android.provider.Settings
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
@@ -21,29 +23,48 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kz.hashiroii.core.domain.model.ThemePreference
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(onClose: () -> Unit) {
+fun SettingsScreen(
+    onClose: () -> Unit,
+    viewModel: SettingsViewModel = hiltViewModel(),
+) {
     val context = LocalContext.current
+    val themePreference by viewModel.themePreference.collectAsStateWithLifecycle()
+    var showThemeSheet by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Settings") },
+                title = { Text(stringResource(R.string.settings_title)) },
                 navigationIcon = {
                     IconButton(onClick = onClose) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.settings_back),
+                        )
                     }
                 },
             )
@@ -54,18 +75,16 @@ fun SettingsScreen(onClose: () -> Unit) {
                 .fillMaxSize()
                 .padding(paddingValues),
         ) {
-            SectionHeader("General")
+            SectionHeader(stringResource(R.string.settings_section_general))
             HorizontalDivider()
             SettingsItem(
                 icon = Icons.Default.Palette,
-                label = "Theme",
-                onClick = {
-                    context.startActivity(Intent(Settings.ACTION_DISPLAY_SETTINGS))
-                },
+                label = stringResource(R.string.settings_theme),
+                onClick = { showThemeSheet = true },
             )
             SettingsItem(
                 icon = Icons.Default.Language,
-                label = "Language",
+                label = stringResource(R.string.settings_language),
                 onClick = {
                     val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         Intent(Settings.ACTION_APP_LOCALE_SETTINGS).apply {
@@ -81,7 +100,7 @@ fun SettingsScreen(onClose: () -> Unit) {
             )
             SettingsItem(
                 icon = Icons.Default.Notifications,
-                label = "Notifications",
+                label = stringResource(R.string.settings_notifications),
                 onClick = {
                     val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
                         putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
@@ -89,18 +108,65 @@ fun SettingsScreen(onClose: () -> Unit) {
                     context.startActivity(intent)
                 },
             )
-            SectionHeader("Other")
+            SectionHeader(stringResource(R.string.settings_section_other))
             HorizontalDivider()
             SettingsItem(
                 icon = Icons.Default.Info,
-                label = "About",
+                label = stringResource(R.string.settings_about),
                 onClick = { },
             )
             SettingsItem(
                 icon = Icons.Default.StarRate,
-                label = "Rate the app",
+                label = stringResource(R.string.settings_rate_app),
                 onClick = { },
             )
+        }
+    }
+
+    if (showThemeSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showThemeSheet = false },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        ) {
+            ThemePickerSheet(
+                current = themePreference,
+                onSelect = { theme ->
+                    viewModel.setTheme(theme)
+                    showThemeSheet = false
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun ThemePickerSheet(
+    current: ThemePreference,
+    onSelect: (ThemePreference) -> Unit,
+) {
+    val options = listOf(
+        ThemePreference.SYSTEM to stringResource(R.string.theme_system),
+        ThemePreference.LIGHT to stringResource(R.string.theme_light),
+        ThemePreference.DARK to stringResource(R.string.theme_dark),
+    )
+    Column(modifier = Modifier.padding(bottom = 32.dp)) {
+        Text(
+            text = stringResource(R.string.settings_theme),
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp),
+        )
+        options.forEach { (theme, label) ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onSelect(theme) }
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                RadioButton(selected = current == theme, onClick = { onSelect(theme) })
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(text = label, style = MaterialTheme.typography.bodyLarge)
+            }
         }
     }
 }

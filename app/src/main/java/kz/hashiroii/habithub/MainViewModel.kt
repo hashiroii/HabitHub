@@ -15,5 +15,9 @@ class MainViewModel @Inject constructor(
     preferencesRepository: PreferencesRepository,
 ) : ViewModel() {
     val themePreference: StateFlow<ThemePreference> = preferencesRepository.themePreference
-        .stateIn(viewModelScope, SharingStarted.Eagerly, ThemePreference.SYSTEM)
+        .stateIn(
+            viewModelScope,
+            SharingStarted.Eagerly,
+            preferencesRepository.getInitialThemeBlocking(),
+        )
 }

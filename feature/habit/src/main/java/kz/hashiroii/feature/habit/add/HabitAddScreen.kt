@@ -54,9 +54,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.res.stringResource
 import kz.hashiroii.core.designsystem.theme.HabitHubTheme
 import kz.hashiroii.core.ui.HabitIcons
 import kz.hashiroii.core.ui.habitColors
+import kz.hashiroii.feature.habit.R
 
 @Composable
 fun HabitAddScreen(
@@ -88,10 +90,10 @@ internal fun HabitAddContent(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Add Habit") },
+                title = { Text(stringResource(R.string.habit_add_title)) },
                 navigationIcon = {
                     IconButton(onClick = onClose) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.habit_back))
                     }
                 },
             )
@@ -128,11 +130,11 @@ internal fun HabitAddContent(
                 OutlinedTextField(
                     value = uiState.name,
                     onValueChange = { onIntent(HabitAddIntent.NameChanged(it)) },
-                    label = { Text("Name") },
+                    label = { Text(stringResource(R.string.habit_name_label)) },
                     singleLine = true,
                     isError = uiState.isNameError,
                     supportingText = if (uiState.isNameError) {
-                        { Text("Name cannot be empty") }
+                        { Text(stringResource(R.string.habit_name_error)) }
                     } else null,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -142,14 +144,14 @@ internal fun HabitAddContent(
                 OutlinedTextField(
                     value = uiState.description,
                     onValueChange = { onIntent(HabitAddIntent.DescriptionChanged(it)) },
-                    label = { Text("Description (optional)") },
+                    label = { Text(stringResource(R.string.habit_description_label)) },
                     maxLines = 3,
                     modifier = Modifier.fillMaxWidth(),
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                Text("Icon", style = MaterialTheme.typography.labelLarge)
+                Text(stringResource(R.string.habit_icon_label), style = MaterialTheme.typography.labelLarge)
                 Spacer(modifier = Modifier.height(8.dp))
                 IconPickerGrid(
                     selectedIconName = uiState.selectedIconName,
@@ -159,7 +161,7 @@ internal fun HabitAddContent(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                Text("Color", style = MaterialTheme.typography.labelLarge)
+                Text(stringResource(R.string.habit_color_label), style = MaterialTheme.typography.labelLarge)
                 Spacer(modifier = Modifier.height(8.dp))
                 ColorPickerGrid(
                     selectedColorHex = uiState.selectedColorHex,
@@ -183,7 +185,7 @@ internal fun HabitAddContent(
                     onClick = { onIntent(HabitAddIntent.SaveClicked) },
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Text("Save Habit")
+                    Text(stringResource(R.string.habit_save))
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -219,12 +221,13 @@ private fun RepetitionRow(
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "Daily repetitions",
+                text = stringResource(R.string.habit_daily_repetitions),
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Medium,
             )
             Text(
-                text = if (goalCount == 1) "Once per day" else "$goalCount times per day",
+                text = if (goalCount == 1) stringResource(R.string.habit_repetitions_once)
+                       else stringResource(R.string.habit_repetitions_many, goalCount),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
             )
@@ -252,7 +255,7 @@ private fun RepetitionWarning() {
         )
         Spacer(modifier = Modifier.width(6.dp))
         Text(
-            text = "Repetition count cannot be changed after creation",
+            text = stringResource(R.string.habit_repetitions_warning),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f),
         )
@@ -279,7 +282,7 @@ private fun RepetitionDialog(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
-                    text = "Daily repetitions",
+                    text = stringResource(R.string.habit_daily_repetitions),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                 )
@@ -306,7 +309,8 @@ private fun RepetitionDialog(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = if (goalCount == 1) "Once per day" else "$goalCount times per day",
+                    text = if (goalCount == 1) stringResource(R.string.habit_repetitions_once)
+                           else stringResource(R.string.habit_repetitions_many, goalCount),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                 )
@@ -345,7 +349,7 @@ private fun RepetitionDialog(
                     onClick = onConfirm,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Text("Confirm")
+                    Text(stringResource(R.string.habit_confirm))
                 }
             }
         }

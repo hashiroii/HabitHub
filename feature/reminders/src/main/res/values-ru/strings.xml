@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="reminders_title">Напоминания · %s</string>
+    <string name="reminders_back">Назад</string>
+    <string name="reminders_add">Добавить напоминание</string>
+    <string name="reminders_delete">Удалить напоминание</string>
+    <string name="reminders_empty_title">Нет напоминаний</string>
+    <string name="reminders_empty_subtitle">Нажмите +, чтобы добавить напоминание</string>
+    <string name="reminders_time_picker_title">Выберите время</string>
+    <string name="reminders_ok">ОК</string>
+    <string name="reminders_cancel">Отмена</string>
+</resources>

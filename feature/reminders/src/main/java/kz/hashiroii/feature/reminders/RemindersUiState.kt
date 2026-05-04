@@ -4,6 +4,7 @@ data class ReminderTime(
     val id: Int,
     val hour: Int,
     val minute: Int,
+    val days: Set<Int> = ALL_DAYS, // 0=Mon, 1=Tue, 2=Wed, 3=Thu, 4=Fri, 5=Sat, 6=Sun
 ) {
     val displayTime: String
         get() {
@@ -15,6 +16,10 @@ data class ReminderTime(
             }
             return "%d:%02d %s".format(displayHour, minute, period)
         }
+
+    companion object {
+        val ALL_DAYS: Set<Int> = (0..6).toSet()
+    }
 }
 
 data class RemindersUiState(

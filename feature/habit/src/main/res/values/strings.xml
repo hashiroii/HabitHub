@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Add / Edit screens shared -->
+    <string name="habit_back">Back</string>
+    <string name="habit_confirm">Confirm</string>
+    <string name="habit_cancel">Cancel</string>
+    <string name="habit_done">Done</string>
+    <!-- Add screen -->
+    <string name="habit_add_title">Add Habit</string>
+    <string name="habit_name_label">Name</string>
+    <string name="habit_name_error">Name cannot be empty</string>
+    <string name="habit_description_label">Description (optional)</string>
+    <string name="habit_icon_label">Icon</string>
+    <string name="habit_color_label">Color</string>
+    <string name="habit_daily_repetitions">Daily repetitions</string>
+    <string name="habit_repetitions_once">Once per day</string>
+    <string name="habit_repetitions_many">%d times per day</string>
+    <string name="habit_repetitions_warning">Repetition count cannot be changed after creation</string>
+    <string name="habit_save">Save Habit</string>
+    <!-- Edit screen -->
+    <string name="habit_edit_title">Edit Habit</string>
+    <string name="habit_reminders_desc">Reminders</string>
+    <string name="habit_share_desc">Share</string>
+    <string name="habit_delete_desc">Delete habit</string>
+    <string name="habit_streak_days">%d day streak</string>
+    <string name="habit_completions">completions</string>
+    <string name="habit_delete_title">Delete habit</string>
+    <string name="habit_delete_message">\"%s\" and all its history will be permanently deleted.</string>
+    <string name="habit_delete_confirm">Delete</string>
+    <string name="habit_unsaved_title">Unsaved changes</string>
+    <string name="habit_unsaved_message">You have unsaved changes. Would you like to save them before leaving?</string>
+    <string name="habit_save_changes">Save</string>
+    <string name="habit_discard">Discard</string>
+</resources>

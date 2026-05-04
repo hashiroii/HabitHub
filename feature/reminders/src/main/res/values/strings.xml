@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="reminders_title">Reminders · %s</string>
+    <string name="reminders_back">Back</string>
+    <string name="reminders_add">Add reminder</string>
+    <string name="reminders_delete">Delete reminder</string>
+    <string name="reminders_empty_title">No reminders yet</string>
+    <string name="reminders_empty_subtitle">Tap + to add a daily reminder</string>
+    <string name="reminders_time_picker_title">Select time</string>
+    <string name="reminders_ok">OK</string>
+    <string name="reminders_cancel">Cancel</string>
+</resources>

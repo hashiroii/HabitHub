@@ -7,7 +7,11 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
@@ -32,6 +36,11 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        val deepLinkHabitId = intent?.data?.let { uri ->
+            if (uri.scheme == "habithub" && uri.host == "habit") {
+                uri.lastPathSegment?.toLongOrNull()
+            } else null
+        }
         setContent {
             val themePreference by viewModel.themePreference.collectAsStateWithLifecycle()
             val darkTheme = when (themePreference) {
@@ -40,15 +49,24 @@ class MainActivity : AppCompatActivity() {
                 ThemePreference.SYSTEM -> isSystemInDarkTheme()
             }
             HabitHubTheme(darkTheme = darkTheme) {
-                HabitHubNavHost()
+                HabitHubNavHost(deepLinkHabitId = deepLinkHabitId)
             }
         }
     }
 }
 
 @Composable
-private fun HabitHubNavHost() {
+private fun HabitHubNavHost(deepLinkHabitId: Long? = null) {
     val navController = rememberNavController()
+    var deepLinkHandled by remember { mutableStateOf(false) }
+
+    LaunchedEffect(deepLinkHabitId) {
+        if (deepLinkHabitId != null && !deepLinkHandled) {
+            deepLinkHandled = true
+            navController.navigate(HabitEditRoute(deepLinkHabitId))
+        }
+    }
+
     NavHost(
         navController = navController,
         startDestination = HomeRoute,

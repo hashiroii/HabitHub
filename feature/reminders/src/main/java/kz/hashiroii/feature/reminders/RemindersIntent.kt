@@ -4,6 +4,7 @@ sealed interface RemindersIntent {
     data object AddReminderClicked : RemindersIntent
     data class TimeSelected(val hour: Int, val minute: Int) : RemindersIntent
     data class DeleteReminder(val reminderId: Int) : RemindersIntent
+    data class ToggleDay(val reminderId: Int, val day: Int) : RemindersIntent
     data object DismissTimePicker : RemindersIntent
     data object Close : RemindersIntent
 }

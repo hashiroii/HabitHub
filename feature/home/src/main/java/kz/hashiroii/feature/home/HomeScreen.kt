@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.time.LocalDate
+import androidx.compose.ui.res.stringResource
 import kz.hashiroii.core.designsystem.theme.HabitHubTheme
 import kz.hashiroii.core.domain.model.DayActivity
 import kz.hashiroii.core.domain.model.Habit
@@ -137,12 +138,12 @@ private fun SuccessContent(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("HabitHub") },
+                title = { Text(stringResource(R.string.home_title)) },
                 actions = {
                     IconButton(onClick = onSettingsClick) {
                         Icon(
                             imageVector = Icons.Default.Settings,
-                            contentDescription = "Settings",
+                            contentDescription = stringResource(R.string.home_settings_desc),
                         )
                     }
                 },
@@ -150,7 +151,7 @@ private fun SuccessContent(
         },
         floatingActionButton = {
             FloatingActionButton(onClick = onAddHabit) {
-                Icon(imageVector = Icons.Default.Add, contentDescription = "Add Habit")
+                Icon(imageVector = Icons.Default.Add, contentDescription = stringResource(R.string.home_add_habit_desc))
             }
         },
     ) { innerPadding ->
@@ -252,7 +253,7 @@ private fun SummaryCard(
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    text = "habits completed today",
+                    text = stringResource(R.string.home_habits_completed_today),
                     style = HabitHubTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -266,7 +267,7 @@ private fun SummaryCard(
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    text = "$overallStreakDays days",
+                    text = stringResource(R.string.home_streak_days, overallStreakDays),
                     style = HabitHubTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

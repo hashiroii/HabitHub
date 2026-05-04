@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Настройки</string>
+    <string name="settings_back">Назад</string>
+    <string name="settings_section_general">Основное</string>
+    <string name="settings_theme">Тема</string>
+    <string name="settings_language">Язык</string>
+    <string name="settings_notifications">Уведомления</string>
+    <string name="settings_section_other">Прочее</string>
+    <string name="settings_about">О приложении</string>
+    <string name="settings_rate_app">Оценить приложение</string>
+    <string name="theme_system">Системная</string>
+    <string name="theme_light">Светлая</string>
+    <string name="theme_dark">Тёмная</string>
+    <string name="home_habits_completed_today">привычек выполнено сегодня</string>
+    <string name="home_streak_days">%d дн.</string>
+    <string name="home_title">HabitHub</string>
+    <string name="home_settings_desc">Настройки</string>
+    <string name="home_add_habit_desc">Добавить привычку</string>
+</resources>

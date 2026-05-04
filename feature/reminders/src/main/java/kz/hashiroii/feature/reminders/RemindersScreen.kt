@@ -1,5 +1,9 @@
 package kz.hashiroii.feature.reminders
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -7,8 +11,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
@@ -29,12 +35,18 @@ import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import java.time.DayOfWeek
+import java.time.format.TextStyle
+import java.util.Locale
 import kz.hashiroii.core.designsystem.theme.HabitHubTheme
 
 @Composable
@@ -69,17 +81,17 @@ internal fun RemindersContent(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Reminders · ${uiState.habitName}") },
+                title = { Text(stringResource(R.string.reminders_title, uiState.habitName)) },
                 navigationIcon = {
                     IconButton(onClick = { onIntent(RemindersIntent.Close) }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.reminders_back))
                     }
                 },
             )
         },
         floatingActionButton = {
             FloatingActionButton(onClick = { onIntent(RemindersIntent.AddReminderClicked) }) {
-                Icon(Icons.Default.Add, contentDescription = "Add reminder")
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.reminders_add))
             }
         },
     ) { paddingValues ->
@@ -93,13 +105,13 @@ internal fun RemindersContent(
             ) {
                 Spacer(modifier = Modifier.height(64.dp))
                 Text(
-                    text = "No reminders yet",
+                    text = stringResource(R.string.reminders_empty_title),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Tap + to add a daily reminder",
+                    text = stringResource(R.string.reminders_empty_subtitle),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
                 )
@@ -114,6 +126,7 @@ internal fun RemindersContent(
                     ReminderRow(
                         reminder = reminder,
                         onDelete = { onIntent(RemindersIntent.DeleteReminder(reminder.id)) },
+                        onToggleDay = { day -> onIntent(RemindersIntent.ToggleDay(reminder.id, day)) },
                     )
                     HorizontalDivider()
                 }
@@ -133,24 +146,69 @@ internal fun RemindersContent(
 private fun ReminderRow(
     reminder: ReminderTime,
     onDelete: () -> Unit,
+    onToggleDay: (Int) -> Unit,
 ) {
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text = reminder.displayTime,
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.weight(1f),
-        )
-        IconButton(onClick = onDelete) {
-            Icon(
-                imageVector = Icons.Default.Delete,
-                contentDescription = "Delete reminder",
-                tint = MaterialTheme.colorScheme.error,
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = reminder.displayTime,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.weight(1f),
             )
+            IconButton(onClick = onDelete) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = stringResource(R.string.reminders_delete),
+                    tint = MaterialTheme.colorScheme.error,
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        DayToggleRow(days = reminder.days, onToggle = onToggleDay)
+    }
+}
+
+@Composable
+private fun DayToggleRow(
+    days: Set<Int>,
+    onToggle: (Int) -> Unit,
+) {
+    val locale = remember { Locale.getDefault() }
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+    ) {
+        for (index in 0..6) {
+            val dayOfWeek = DayOfWeek.of(index + 1)
+            val label = dayOfWeek.getDisplayName(TextStyle.NARROW, locale)
+                .take(2)
+                .replaceFirstChar { it.uppercaseChar() }
+            val selected = index in days
+            val bgColor = if (selected) MaterialTheme.colorScheme.primary
+                          else MaterialTheme.colorScheme.surfaceVariant
+            val textColor = if (selected) MaterialTheme.colorScheme.onPrimary
+                            else MaterialTheme.colorScheme.onSurfaceVariant
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(bgColor)
+                    .clickable { onToggle(index) },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = textColor,
+                )
+            }
         }
     }
 }
@@ -164,13 +222,17 @@ private fun TimePickerDialog(
     val state = rememberTimePickerState()
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Select time") },
+        title = { Text(stringResource(R.string.reminders_time_picker_title)) },
         text = { TimePicker(state = state) },
         confirmButton = {
-            TextButton(onClick = { onConfirm(state.hour, state.minute) }) { Text("OK") }
+            TextButton(onClick = { onConfirm(state.hour, state.minute) }) {
+                Text(stringResource(R.string.reminders_ok))
+            }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.reminders_cancel))
+            }
         },
     )
 }
@@ -194,8 +256,8 @@ private fun RemindersWithItemsPreview() {
             uiState = RemindersUiState(
                 habitName = "Morning Run",
                 reminders = listOf(
-                    ReminderTime(1, 7, 0),
-                    ReminderTime(2, 18, 30),
+                    ReminderTime(1, 7, 0, days = setOf(0, 1, 2, 3, 4)),
+                    ReminderTime(2, 18, 30, days = setOf(5, 6)),
                 ),
             ),
             onIntent = {},
