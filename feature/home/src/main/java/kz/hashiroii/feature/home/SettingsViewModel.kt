@@ -19,7 +19,11 @@ class SettingsViewModel @Inject constructor(
 ) : ViewModel() {
 
     val themePreference: StateFlow<ThemePreference> = preferencesRepository.themePreference
-        .stateIn(viewModelScope, SharingStarted.Eagerly, ThemePreference.SYSTEM)
+        .stateIn(
+            viewModelScope,
+            SharingStarted.Eagerly,
+            ThemePreference.SYSTEM
+        )
 
     fun setTheme(theme: ThemePreference) {
         viewModelScope.launch { preferencesRepository.setThemePreference(theme) }

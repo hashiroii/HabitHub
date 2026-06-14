@@ -53,8 +53,6 @@ import kz.hashiroii.core.ui.HabitIcons
 internal const val TAG_HOME_LOADING = "home_loading"
 internal const val TAG_HOME_ERROR = "home_error"
 
-// ── Entry point ──────────────────────────────────────────────────────────────
-
 @Composable
 fun HomeScreen(
     onAddHabit: () -> Unit = {},
@@ -72,8 +70,6 @@ fun HomeScreen(
         onSettingsClick = onSettingsClick,
     )
 }
-
-// ── Internal stateless content ────────────────────────────────────────────────
 
 @Composable
 internal fun HomeContent(
@@ -95,8 +91,6 @@ internal fun HomeContent(
         )
     }
 }
-
-// ── State views ───────────────────────────────────────────────────────────────
 
 @Composable
 private fun LoadingView() {

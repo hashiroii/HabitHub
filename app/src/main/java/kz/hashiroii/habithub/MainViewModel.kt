@@ -14,10 +14,10 @@ import javax.inject.Inject
 class MainViewModel @Inject constructor(
     preferencesRepository: PreferencesRepository,
 ) : ViewModel() {
-    val themePreference: StateFlow<ThemePreference> = preferencesRepository.themePreference
+    val themePreference: StateFlow<ThemePreference?> = preferencesRepository.themePreference
         .stateIn(
             viewModelScope,
             SharingStarted.Eagerly,
-            preferencesRepository.getInitialThemeBlocking(),
+            null,
         )
 }

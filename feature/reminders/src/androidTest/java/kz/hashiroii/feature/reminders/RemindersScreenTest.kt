@@ -91,7 +91,6 @@ class RemindersScreenTest {
                 )
             }
         }
-        // All 7 days are selected — delete button present
         composeRule.onAllNodesWithContentDescription("Delete reminder")[0].assertIsDisplayed()
     }
 
