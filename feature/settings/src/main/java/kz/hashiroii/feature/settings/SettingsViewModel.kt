@@ -1,4 +1,4 @@
-package kz.hashiroii.feature.home
+package kz.hashiroii.feature.settings
 
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat

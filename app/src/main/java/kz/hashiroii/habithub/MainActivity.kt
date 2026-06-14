@@ -24,11 +24,11 @@ import kz.hashiroii.feature.habit.navigation.HabitEditRoute
 import kz.hashiroii.feature.habit.navigation.habitAddScreen
 import kz.hashiroii.feature.habit.navigation.habitEditScreen
 import kz.hashiroii.feature.home.navigation.HomeRoute
-import kz.hashiroii.feature.home.navigation.SettingsRoute
 import kz.hashiroii.feature.home.navigation.homeScreen
-import kz.hashiroii.feature.home.navigation.settingsScreen
 import kz.hashiroii.feature.reminders.navigation.RemindersRoute
 import kz.hashiroii.feature.reminders.navigation.remindersScreen
+import kz.hashiroii.feature.settings.navigation.SettingsRoute
+import kz.hashiroii.feature.settings.navigation.settingsScreen
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {

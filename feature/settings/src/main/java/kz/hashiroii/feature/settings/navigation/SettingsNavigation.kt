@@ -1,9 +1,9 @@
-package kz.hashiroii.feature.home.navigation
+package kz.hashiroii.feature.settings.navigation
 
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import kotlinx.serialization.Serializable
-import kz.hashiroii.feature.home.SettingsScreen
+import kz.hashiroii.feature.settings.SettingsScreen
 
 @Serializable
 object SettingsRoute

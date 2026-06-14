@@ -1,4 +1,4 @@
-package kz.hashiroii.feature.home
+package kz.hashiroii.feature.settings
 
 import android.content.Intent
 import android.os.Build

@@ -67,6 +67,8 @@ dependencies {
     implementation(projects.feature.home)
     implementation(projects.feature.habit)
     implementation(projects.feature.reminders)
+    implementation(projects.feature.settings)
+
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.core.ktx)
